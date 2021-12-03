@@ -162,4 +162,5 @@ type Transfer @entity {
 type Account @entity {
     id: ID!
     chainId: String!
+    balance: BigInt!
 }

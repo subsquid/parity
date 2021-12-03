@@ -1,7 +1,7 @@
 const { MigrationInterface, QueryRunner } = require("typeorm");
 
-module.exports = class paritytest1638503800300 {
-    name = 'paritytest1638503800300'
+module.exports = class paritytest1638508202670 {
+    name = 'paritytest1638508202670'
 
     async up(queryRunner) {
         await queryRunner.query(`CREATE TABLE "parachain_leases" ("id" character varying NOT NULL, "para_id" integer NOT NULL, "lease_range" text NOT NULL, "first_lease" integer NOT NULL, "last_lease" integer NOT NULL, "latest_bid_amount" numeric NOT NULL, "active_for_auction" text, "winning_amount" numeric, "extra_amount" numeric, "won_bid_from" text, "num_block_won" integer, "winning_result_block" integer, "has_won" boolean NOT NULL, "parachain_id" character varying NOT NULL, "auction_id" character varying, CONSTRAINT "PK_fda8294c956880bda2771666a91" PRIMARY KEY ("id"))`);
@@ -31,7 +31,7 @@ module.exports = class paritytest1638503800300 {
         await queryRunner.query(`CREATE TABLE "chain" ("id" character varying NOT NULL, "token_id" text NOT NULL, "chain_name" text NOT NULL, "relay_id" text, "relay_chain" text, CONSTRAINT "PK_8e273aafae283b886672c952ecd" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "balance" ("id" character varying NOT NULL, "account_id" text NOT NULL, "token_id" text NOT NULL, "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL, "free_balance" numeric, "bonded_balance" numeric, "vested_balance" numeric, CONSTRAINT "PK_079dddd31a81672e8143a649ca0" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "transfer" ("id" character varying NOT NULL, "sender_account" text NOT NULL, "reveiver_account" text NOT NULL, "token_id" text NOT NULL, "amount" numeric NOT NULL, "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT "PK_fd9ddbdd49a17afcbe014401295" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "account" ("id" character varying NOT NULL, "chain_id" text NOT NULL, CONSTRAINT "PK_54115ee388cdb6d86bb4bf5b2ea" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "account" ("id" character varying NOT NULL, "chain_id" text NOT NULL, "balance" numeric NOT NULL, CONSTRAINT "PK_54115ee388cdb6d86bb4bf5b2ea" PRIMARY KEY ("id"))`);
         await queryRunner.query(`ALTER TABLE "parachain_leases" ADD CONSTRAINT "FK_d1ccf431430ad6ce759c972ddb1" FOREIGN KEY ("parachain_id") REFERENCES "parachain"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "parachain_leases" ADD CONSTRAINT "FK_7237948a5f4178c1272c69f2429" FOREIGN KEY ("auction_id") REFERENCES "auction"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "contribution" ADD CONSTRAINT "FK_676bed3b91141b1f2f4dde1cf28" FOREIGN KEY ("parachain_id") REFERENCES "parachain"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);

@@ -84,27 +84,34 @@ const handleAccountAndBalance = async (
             console.log(`[TOKEN]: ${tokenData.id} saved successfully`);
         }
 
-        // chain data check and creation
-        let chainData: Chain | undefined = await store.get(Chain, {
-            where: { id: constChainDetails.id }   // This is temporary until we got way to get the chain id and token id
-        });
-
-
-        if (!chainData) {
-            chainData = new Chain(constChainDetails);
-            await store.save(chainData);
-            console.log(`[CHAIN]: ${chainData.id} saved successfully`);
-        }
+         // chain data check and creation
+         const chainID = `${block.height}-${who}` || constChainDetails.id
+         let chainData: Chain | undefined = await store.get(Chain, {
+             where: { id: chainID }   // This is temporary until we got way to get the chain id and token id
+         });
+ 
+ 
+         if (!chainData) {
+             constChainDetails.id = chainID;
+             chainData = new Chain(constChainDetails);
+             await store.save(chainData);
+             console.log(`[CHAIN]: ${chainData.id} saved successfully`);
+         }
 
         // account data check and creation
         if (!account) {
             account = new Account({
                 id: who,
-                chainId: tokenData.id.toString()
+                chainId: tokenData.id.toString(),
+                balance: balanceValue
             })
-            await store.save(account);
             console.log(`[ACCOUNT]: ${account.id} saved successfully`);
+        } else {
+            account.balance = balanceValue
+            console.log(`[ACCOUNT]: ${account.id} balance updated successfully`);
         }
+
+        await store.save(account);
 
         // account data saving
         balance = new Balance({
