@@ -5,6 +5,19 @@ import { apiService } from "./helpers/api";
 import { ChronicleKey } from '../constants';
 import { ensureFund, ensureParachain, get, getByAuctionParachain, getByAuctions, getLatestCrowdloanId, getOrCreate, getOrUpdate, isFundAddress } from "./helpers/common";
 
+let periodData: number[];
+
+const getLeasePeriod = async (): Promise<number[]> => {
+  if (!periodData || periodData.length === 0) {
+    const api = await apiService();
+    const endingPeriod =  api.consts.auctions.endingPeriod.toJSON() as number;
+    const leasePeriod =  api.consts.slots.leasePeriod.toJSON() as number;
+    const periods =  api.consts.auctions.leasePeriodsPerSlot.toJSON() as number;
+    periodData = [endingPeriod, leasePeriod, periods];
+  }
+  return periodData
+}
+
 export async function handlerEmpty () {};
 
 export async function handleAuctionStarted({
@@ -16,22 +29,19 @@ export async function handleAuctionStarted({
 
   const [auctionId, slotStart, auctionEnds] = new Auctions.AuctionStartedEvent(event).params;
 
-  const api = await apiService();
-  const endingPeriod =  api.consts.auctions.endingPeriod.toJSON() as number;
-  const leasePeriod =  api.consts.slots.leasePeriod.toJSON() as number;
-  const periods =  api.consts.auctions.leasePeriodsPerSlot.toJSON() as number;
+  periodData = (!periodData || periodData.length === 0) ? await getLeasePeriod() : periodData;
 
   const auction = await getOrCreate(store, Auction, auctionId.toString());
 
   auction.blockNum = block.height;
   auction.status = "Started";
   auction.slotsStart = slotStart.toNumber();
-  auction.slotsEnd = slotStart.toNumber() + periods - 1;
-  auction.leaseStart = slotStart.toNumber() * leasePeriod;
-  auction.leaseEnd = (slotStart.toNumber() + periods - 1) * leasePeriod;
+  auction.slotsEnd = slotStart.toNumber() + periodData[2] - 1;
+  auction.leaseStart = slotStart.toNumber() * periodData[1];
+  auction.leaseEnd = (slotStart.toNumber() + periodData[2] - 1) * periodData[1];
   auction.createdAt = new Date(block.timestamp)
   auction.closingStart = auctionEnds.toNumber();
-  auction.closingEnd = auctionEnds.toNumber() + endingPeriod;
+  auction.closingEnd = auctionEnds.toNumber() + periodData[0];
   auction.ongoing = true;
   await store.save(auction);
 

@@ -8,6 +8,15 @@ import { CrowdloanStatus } from "../constants";
 import { parseNumber } from "./helpers/utils";
 
 let leasePeriod: number;
+
+const getLeasePeriod = async (): Promise<number> => {
+  if (!leasePeriod) {
+    const api = await apiService();
+    leasePeriod = api.consts.slots.leasePeriod.toJSON() as number;
+  }
+  return leasePeriod
+}
+
 export async function handleSlotsLeased({
   store,
   event,
@@ -122,12 +131,4 @@ export async function handleNewLeasePeriod({
 
   await getOrUpdate(store, Chronicle, ChronicleKey, newValue)
   console.info(` ------ [Slots] [NewLeasePeriod] Event Completed.`);
-}
-
-const getLeasePeriod = async (): Promise<number> => {
-  if (!leasePeriod) {
-    const api = await apiService();
-    leasePeriod = api.consts.slots.leasePeriod.toJSON() as number;
-  }
-  return leasePeriod
 }
