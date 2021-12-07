@@ -1,5 +1,5 @@
 export const constTokenDetails = {
-    id: "KUS",
+    id: "KSM",
     tokenName: "KUSAMA"
 };
 

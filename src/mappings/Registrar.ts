@@ -4,7 +4,6 @@ import { Registrar } from "../types";
 import { apiService } from "./helpers/api";
 import { getOrCreate } from "./helpers/common";
 
-//Reviewed
 export async function handleParachainRegistered({
   store,
   event,
