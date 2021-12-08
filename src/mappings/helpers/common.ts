@@ -22,7 +22,7 @@ import {
 } from "./utils";
 
 type EntityConstructor<T> = {
-  new (...args: any[]): T;
+  new(...args: any[]): T;
 };
 /**
  * Construct a type with a set of properties K of type T
@@ -56,7 +56,7 @@ export async function get<T extends { id: string }>(
   store: DatabaseManager,
   entityConstructor: EntityConstructor<T>,
   id: string
-): Promise<T  | undefined> {
+): Promise<T | undefined> {
   let e = await store.get(entityConstructor, {
     where: { id },
   });
@@ -82,8 +82,8 @@ export const getOrUpdate = async <T>(
       ? updateFn(e)
       : { ...e, ...newValues, id }
     : updateFn
-    ? updateFn()
-    : { ...newValues, id };
+      ? updateFn()
+      : { ...newValues, id };
   e = e || new entityConstructor({ id });
   for (const property in updatedItem) {
     e[property] = updatedItem[property];
@@ -110,8 +110,12 @@ export const fetchParachain = async (
   paraId: number,
   block: SubstrateBlock
 ): Promise<ParachainReturn | null> => {
+  /**
+   * Api changes as per the new AT syntax
+   */
   const api = await apiService();
-  const parachain = (await api.query.registrar.paras.at(block.hash,paraId)).toJSON() as unknown;
+  const apiAt = await api.at(block.hash);
+  const parachain = (await apiAt.query.registrar.paras(paraId)).toJSON() as unknown;
 
   return parachain as ParachainReturn | null;
 };
@@ -228,32 +232,32 @@ export const ensureFund = async (
   return getOrUpdate<Crowdloan>(store, Crowdloan, fundId, test, (cur: any) => {
     return !cur
       ? new Crowdloan({
-          id: fundId,
-          parachain: parachain[0],
-          paraId: paraId.toString(),
-          tokenId: tokenData?.id.toString() || constTokenDetails.id,
-          ...rest,
-          firstSlot: firstPeriod,
-          lastSlot: lastPeriod,
-          status: CrowdloanStatus.STARTED,
-          raised: parseNumber(raised) as unknown as bigint,
-          cap: parseNumber(cap) as unknown as bigint,
-          lockExpiredBlock: end,
-          isFinished: false,
-          ...modifier,
-        })
+        id: fundId,
+        parachain: parachain[0],
+        paraId: paraId.toString(),
+        tokenId: tokenData?.id.toString() || constTokenDetails.id,
+        ...rest,
+        firstSlot: firstPeriod,
+        lastSlot: lastPeriod,
+        status: CrowdloanStatus.STARTED,
+        raised: parseNumber(raised) as unknown as bigint,
+        cap: parseNumber(cap) as unknown as bigint,
+        lockExpiredBlock: end,
+        isFinished: false,
+        ...modifier,
+      })
       : new Crowdloan({
-          ...cur,
-          raised:
-            raised === undefined
-              ? (parseBigInt(cur.raised) as unknown as bigint)
-              : (parseNumber(raised) as unknown as bigint),
-          cap:
-            cap === undefined
-              ? (parseBigInt(cur.cap) as unknown as bigint)
-              : (parseNumber(cap) as unknown as bigint),
-          ...modifier,
-        });
+        ...cur,
+        raised:
+          raised === undefined
+            ? (parseBigInt(cur.raised) as unknown as bigint)
+            : (parseNumber(raised) as unknown as bigint),
+        cap:
+          cap === undefined
+            ? (parseBigInt(cur.cap) as unknown as bigint)
+            : (parseNumber(cap) as unknown as bigint),
+        ...modifier,
+      });
   });
 };
 
@@ -274,7 +278,7 @@ export const getByLeaseRange = async (store: DatabaseManager, leaseRange: string
     take: 1,
   });
 
-  return records.map((record: any )=> create(record, ParachainLeases));
+  return records.map((record: any) => create(record, ParachainLeases));
 }
 
 export const getByWinningAuction = async (store: DatabaseManager, winningAuction: number): Promise<Bid[] | undefined> => {
@@ -283,28 +287,28 @@ export const getByWinningAuction = async (store: DatabaseManager, winningAuction
     take: 1,
   });
 
-  return records.map((record: any )=> create(record, Bid));
+  return records.map((record: any) => create(record, Bid));
 }
 
-export const getByAuctionParachain = async (store: DatabaseManager, id:string): Promise<AuctionParachain[] | undefined> => {
+export const getByAuctionParachain = async (store: DatabaseManager, id: string): Promise<AuctionParachain[] | undefined> => {
   const records = await store.find(AuctionParachain, {
     where: { id },
     take: 1,
   });
 
-  return records.map((record: any ) => create(record, AuctionParachain));
+  return records.map((record: any) => create(record, AuctionParachain));
 }
 
-export const getByAuctions = async (store: DatabaseManager, id:string): Promise<Auction[] | undefined> => {
+export const getByAuctions = async (store: DatabaseManager, id: string): Promise<Auction[] | undefined> => {
   const records = await store.find(Auction, {
     where: { id },
     take: 1,
   });
 
-  if (records){
-    return records.map((record: any ) => create(record, Auction));
-  }else{
-      return;
+  if (records) {
+    return records.map((record: any) => create(record, Auction));
+  } else {
+    return;
   }
 }
 
