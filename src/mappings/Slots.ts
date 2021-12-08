@@ -1,5 +1,5 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
-import { CHRONICLE_KEY, IGINORE_PARACHAIN_IDS } from "../constants";
+import { CHRONICLE_KEY, IGNORE_PARACHAIN_IDS } from "../constants";
 import {
   Auction,
   Chronicle,
@@ -38,7 +38,7 @@ export const handleSlotsLeased = async ({
     new Slots.LeasedEvent(event).params;
   const lastLease = firstLease.toNumber() + leaseCount.toNumber() - 1;
 
-  if (IGINORE_PARACHAIN_IDS.includes(paraId.toNumber())) {
+  if (IGNORE_PARACHAIN_IDS.includes(paraId.toNumber())) {
     return;
   }
 
