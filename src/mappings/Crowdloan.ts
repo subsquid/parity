@@ -1,16 +1,19 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
 import { ensureFund, ensureParachain, get } from "./helpers/common";
 import { parseNumber, getParachainId } from "./helpers/utils";
-import { Contribution, Parachain, Crowdloan as CrowdloanModel } from "../generated/model";
+import {
+  Contribution,
+  Parachain,
+  Crowdloan as CrowdloanModel,
+} from "../generated/model";
 import { CrowdloanStatus } from "../constants";
 import { Crowdloan } from "../types";
 
 export const handleCrowdloanCreated = async ({
   store,
   event,
-  block
+  block,
 }: EventContext & StoreContext): Promise<void> => {
-
   const [fundId] = new Crowdloan.CreatedEvent(event).params;
   await ensureParachain(fundId.toNumber(), store, block);
   await ensureFund(fundId.toNumber(), store, block, { blockNum: block.height });
@@ -19,15 +22,15 @@ export const handleCrowdloanCreated = async ({
 export const handleCrowdloanContributed = async ({
   store,
   event,
-  block
+  block,
 }: EventContext & StoreContext): Promise<void> => {
-
   const blockNum = block.height;
-  const [contributorId, fundIdx, amount] = new Crowdloan.ContributedEvent(event).params;
+  const [contributorId, fundIdx, amount] = new Crowdloan.ContributedEvent(event)
+    .params;
   const parachain = await ensureParachain(fundIdx.toNumber(), store, block);
 
   const fund = await ensureFund(fundIdx.toNumber(), store, block);
-  const fundId = fund.id
+  const fundId = fund.id;
   const crowdLoan = await get(store, CrowdloanModel, fundId);
 
   if (crowdLoan) {
@@ -39,19 +42,18 @@ export const handleCrowdloanContributed = async ({
       fund: crowdLoan,
       amount: amount.toBigInt(),
       createdAt: new Date(block.timestamp),
-      blockNum
+      blockNum,
     });
 
     await store.save(contribution);
   }
-}
+};
 
 export const handleCrowdloanDissolved = async ({
   store,
   event,
-  block
+  block,
 }: EventContext & StoreContext): Promise<void> => {
-
   const { timestamp: createdAt } = block;
   const blockNum = block.height;
   const [fundId] = new Crowdloan.DissolvedEvent(event).params;
@@ -61,4 +63,4 @@ export const handleCrowdloanDissolved = async ({
     updatedAt: new Date(createdAt),
     dissolvedBlock: blockNum,
   });
-}
+};

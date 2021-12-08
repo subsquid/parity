@@ -22,7 +22,7 @@ import {
 } from "./utils";
 
 type EntityConstructor<T> = {
-  new(...args: any[]): T;
+  new (...args: any[]): T;
 };
 /**
  * Construct a type with a set of properties K of type T
@@ -32,8 +32,8 @@ type Record<K extends keyof any, T> = {
 };
 
 export const timestampToDate = (block: SubstrateBlock): Date => {
-  return new Date(block.timestamp)
-}
+  return new Date(block.timestamp);
+};
 
 export const getOrCreate = async <T extends { id: string }>(
   store: DatabaseManager,
@@ -50,7 +50,7 @@ export const getOrCreate = async <T extends { id: string }>(
   }
 
   return e;
-}
+};
 
 export const get = async <T extends { id: string }>(
   store: DatabaseManager,
@@ -62,7 +62,7 @@ export const get = async <T extends { id: string }>(
   });
 
   return e;
-}
+};
 
 export const getOrUpdate = async <T>(
   store: DatabaseManager,
@@ -82,8 +82,8 @@ export const getOrUpdate = async <T>(
       ? updateFn(e)
       : { ...e, ...newValues, id }
     : updateFn
-      ? updateFn()
-      : { ...newValues, id };
+    ? updateFn()
+    : { ...newValues, id };
   e = e || new entityConstructor({ id });
   for (const property in updatedItem) {
     e[property] = updatedItem[property];
@@ -115,7 +115,9 @@ export const fetchParachain = async (
    */
   const api = await apiService();
   const apiAt = await api.at(block.hash);
-  const parachain = (await apiAt.query.registrar.paras(paraId)).toJSON() as unknown;
+  const parachain = (
+    await apiAt.query.registrar.paras(paraId)
+  ).toJSON() as unknown;
 
   return parachain as ParachainReturn | null;
 };
@@ -220,7 +222,7 @@ export const ensureFund = async (
 
   // token data check and creation
   let tokenData: Token | undefined = await store.get(Token, {
-    where: { id: constTokenDetails.id }  // This is temporary until we got way to get the chain id and token id
+    where: { id: constTokenDetails.id }, // This is temporary until we got way to get the chain id and token id
   });
 
   if (!tokenData) {
@@ -231,32 +233,32 @@ export const ensureFund = async (
   return getOrUpdate<Crowdloan>(store, Crowdloan, fundId, test, (cur: any) => {
     return !cur
       ? new Crowdloan({
-        id: fundId,
-        parachain: parachain[0],
-        paraId: paraId.toString(),
-        tokenId: tokenData?.id || constTokenDetails.id,
-        ...rest,
-        firstSlot: firstPeriod,
-        lastSlot: lastPeriod,
-        status: CrowdloanStatus.STARTED,
-        raised: parseNumber(raised) as unknown as bigint,
-        cap: parseNumber(cap) as unknown as bigint,
-        lockExpiredBlock: end,
-        isFinished: false,
-        ...modifier,
-      })
+          id: fundId,
+          parachain: parachain[0],
+          paraId: paraId.toString(),
+          tokenId: tokenData?.id || constTokenDetails.id,
+          ...rest,
+          firstSlot: firstPeriod,
+          lastSlot: lastPeriod,
+          status: CrowdloanStatus.STARTED,
+          raised: parseNumber(raised) as unknown as bigint,
+          cap: parseNumber(cap) as unknown as bigint,
+          lockExpiredBlock: end,
+          isFinished: false,
+          ...modifier,
+        })
       : new Crowdloan({
-        ...cur,
-        raised:
-          raised === undefined
-            ? (parseBigInt(cur.raised) as unknown as bigint)
-            : (parseNumber(raised) as unknown as bigint),
-        cap:
-          cap === undefined
-            ? (parseBigInt(cur.cap) as unknown as bigint)
-            : (parseNumber(cap) as unknown as bigint),
-        ...modifier,
-      });
+          ...cur,
+          raised:
+            raised === undefined
+              ? (parseBigInt(cur.raised) as unknown as bigint)
+              : (parseNumber(raised) as unknown as bigint),
+          cap:
+            cap === undefined
+              ? (parseBigInt(cur.cap) as unknown as bigint)
+              : (parseNumber(cap) as unknown as bigint),
+          ...modifier,
+        });
   });
 };
 
@@ -271,34 +273,46 @@ export const getAuctionsByOngoing = async (
   return records.map((record) => create(record, Auction)) as Auction[];
 };
 
-export const getByLeaseRange = async (store: DatabaseManager, leaseRange: string): Promise<ParachainLeases[] | undefined> => {
+export const getByLeaseRange = async (
+  store: DatabaseManager,
+  leaseRange: string
+): Promise<ParachainLeases[] | undefined> => {
   const records = await store.find(ParachainLeases, {
     where: { leaseRange },
     take: 1,
   });
 
   return records.map((record: any) => create(record, ParachainLeases));
-}
+};
 
-export const getByWinningAuction = async (store: DatabaseManager, winningAuction: number): Promise<Bid[] | undefined> => {
+export const getByWinningAuction = async (
+  store: DatabaseManager,
+  winningAuction: number
+): Promise<Bid[] | undefined> => {
   const records = await store.find(Bid, {
     where: { winningAuction },
     take: 1,
   });
 
   return records.map((record: any) => create(record, Bid));
-}
+};
 
-export const getByAuctionParachain = async (store: DatabaseManager, id: string): Promise<AuctionParachain[] | undefined> => {
+export const getByAuctionParachain = async (
+  store: DatabaseManager,
+  id: string
+): Promise<AuctionParachain[] | undefined> => {
   const records = await store.find(AuctionParachain, {
     where: { id },
     take: 1,
   });
 
   return records.map((record: any) => create(record, AuctionParachain));
-}
+};
 
-export const getByAuctions = async (store: DatabaseManager, id: string): Promise<Auction[] | undefined> => {
+export const getByAuctions = async (
+  store: DatabaseManager,
+  id: string
+): Promise<Auction[] | undefined> => {
   const records = await store.find(Auction, {
     where: { id },
     take: 1,
@@ -309,12 +323,14 @@ export const getByAuctions = async (store: DatabaseManager, id: string): Promise
   } else {
     return;
   }
-}
+};
 
-export const create = <T>(record: any, entityConstructor: EntityConstructor<T>) => {
+export const create = <T>(
+  record: any,
+  entityConstructor: EntityConstructor<T>
+) => {
   let entity = new entityConstructor(record.id);
   Object.assign(entity, record);
 
   return entity;
 };
-

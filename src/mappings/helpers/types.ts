@@ -1,4 +1,4 @@
-import { Crowdloan } from '../../generated/model';
+import { Crowdloan } from "../../generated/model";
 
 type HexNumber = string;
 

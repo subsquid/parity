@@ -1,9 +1,19 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
 import { ChronicleKey, IgnoreParachainIds } from "../constants";
-import { Auction, Chronicle, Parachain, ParachainLeases } from "../generated/model";
+import {
+  Auction,
+  Chronicle,
+  Parachain,
+  ParachainLeases,
+} from "../generated/model";
 import { Slots } from "../types";
 import { apiService } from "./helpers/api";
-import { ensureFund, ensureParachain, getOrUpdate, isFundAddress } from "./helpers/common";
+import {
+  ensureFund,
+  ensureParachain,
+  getOrUpdate,
+  isFundAddress,
+} from "./helpers/common";
 import { CrowdloanStatus } from "../constants";
 import { parseNumber } from "./helpers/utils";
 
@@ -13,26 +23,30 @@ const getLeasePeriod = async (hash: string): Promise<number> => {
   if (!leasePeriod) {
     const api = await apiService();
     const apiAt = await api.at(hash);
-    leasePeriod = apiAt.consts.slots?.leasePeriod.toJSON() as number || -1;
+    leasePeriod = (apiAt.consts.slots?.leasePeriod.toJSON() as number) || -1;
   }
-  return leasePeriod
-}
+  return leasePeriod;
+};
 
 export const handleSlotsLeased = async ({
   store,
   event,
   block,
 }: EventContext & StoreContext): Promise<void> => {
-
   const blockNum = block.height;
-  const [paraId, from, firstLease, leaseCount, extra, total] = new Slots.LeasedEvent(event).params;
+  const [paraId, from, firstLease, leaseCount, extra, total] =
+    new Slots.LeasedEvent(event).params;
   const lastLease = firstLease.toNumber() + leaseCount.toNumber() - 1;
 
   if (IgnoreParachainIds.includes(paraId.toNumber())) {
     return;
   }
 
-  const { id: parachainId } = await ensureParachain(paraId.toNumber(), store, block);
+  const { id: parachainId } = await ensureParachain(
+    paraId.toNumber(),
+    store,
+    block
+  );
   const totalUsed = parseNumber(total.toString());
   const extraAmount = parseNumber(extra.toString());
 
@@ -84,8 +98,10 @@ export const handleSlotsLeased = async ({
     take: 1,
   });
 
-
-  await getOrUpdate(store, ParachainLeases, `${paraId}-${auctionId || "sudo"}-${firstLease}-${lastLease}`,
+  await getOrUpdate(
+    store,
+    ParachainLeases,
+    `${paraId}-${auctionId || "sudo"}-${firstLease}-${lastLease}`,
     {
       paraId,
       parachain: parachain[0],
@@ -101,25 +117,25 @@ export const handleSlotsLeased = async ({
       wonBidFrom: from.toString(),
       winningResultBlock: resultBlock,
       hasWon: true,
-    }).catch((err) => {
-      console.error(`Upsert ParachainLeases failed ${err}`);
-    });
-}
+    }
+  ).catch((err) => {
+    console.error(`Upsert ParachainLeases failed ${err}`);
+  });
+};
 
 export const handleNewLeasePeriod = async ({
   store,
   event,
   block,
 }: EventContext & StoreContext): Promise<void> => {
-
   const [leaseIdx] = new Slots.NewLeasePeriodEvent(event).params;
-  leasePeriod = leasePeriod || await getLeasePeriod(block.hash);
+  leasePeriod = leasePeriod || (await getLeasePeriod(block.hash));
   const timestamp: number = Math.round(block.timestamp / 1000);
   let newValue = {
     curLease: leaseIdx.toNumber(),
     curLeaseStart: timestamp,
-    curLeaseEnd: timestamp + leasePeriod - 1
-  }
+    curLeaseEnd: timestamp + leasePeriod - 1,
+  };
 
-  await getOrUpdate(store, Chronicle, ChronicleKey, newValue)
-}
+  await getOrUpdate(store, Chronicle, ChronicleKey, newValue);
+};
