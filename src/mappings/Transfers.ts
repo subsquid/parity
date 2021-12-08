@@ -30,7 +30,6 @@ export const handleTransfer = async ({
         if (!tokenData) {
             tokenData = new Token(constTokenDetails);
             await store.save(tokenData);
-            console.log(`[TOKEN]: ${tokenData.id} saved successfully`);
         }
 
         // account data creation and saving
@@ -45,9 +44,6 @@ export const handleTransfer = async ({
         });
 
         await store.save(transfer);
-        console.log(`[TRANSFER]: ${transfer.id} saved successfully`);
-    } else {
-        console.log(`[TRANSFER]: ${transfer.id} already present`);
     }
 
 }
@@ -81,7 +77,6 @@ const handleAccountAndBalance = async (
         if (!tokenData) {
             tokenData = new Token(constTokenDetails);
             await store.save(tokenData);
-            console.log(`[TOKEN]: ${tokenData.id} saved successfully`);
         }
 
          // chain data check and creation
@@ -95,7 +90,6 @@ const handleAccountAndBalance = async (
              constChainDetails.id = chainID;
              chainData = new Chain(constChainDetails);
              await store.save(chainData);
-             console.log(`[CHAIN]: ${chainData.id} saved successfully`);
          }
 
         // account data check and creation
@@ -105,10 +99,8 @@ const handleAccountAndBalance = async (
                 chainId: tokenData.id.toString(),
                 balance: balanceValue
             })
-            console.log(`[ACCOUNT]: ${account.id} saved successfully`);
         } else {
             account.balance = balanceValue
-            console.log(`[ACCOUNT]: ${account.id} balance updated successfully`);
         }
 
         await store.save(account);
@@ -124,11 +116,8 @@ const handleAccountAndBalance = async (
         });
 
         await store.save(balance);
-        console.log(`[BALANCE]: ${balance.id} saved successfully`);
-
     } else {
         balance.bondedBalance = balanceValue
         await store.save(balance);
-        console.log(`[BALANCE]: ${balance.id} already present and updated`);
     }
 }

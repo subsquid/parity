@@ -226,7 +226,6 @@ export const ensureFund = async (
   if (!tokenData) {
     tokenData = new Token(constTokenDetails);
     await store.save(tokenData);
-    console.log(`[TOKEN]: ${tokenData.id} saved successfully`);
   }
 
   return getOrUpdate<Crowdloan>(store, Crowdloan, fundId, test, (cur: any) => {

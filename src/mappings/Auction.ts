@@ -99,7 +99,6 @@ export async function handleAuctionWinningOffset({
     where: { id: auctionId.toString() }
   })
   if (!auction) {
-    console.log('Auction not defined for handleAuctionWinningOffset')
     process.exit(1)
   }
 
