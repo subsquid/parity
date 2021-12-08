@@ -55,4 +55,4 @@ mappings:
   extrinsicHandlers:
   preBlockHooks:
   postBlockHooks:
-  # range: '[ 7861500, ]' # Auction startednewleas
+  # range: '[ 9034309, ]' # Auction startednewleas

@@ -1,6 +1,6 @@
 import { DatabaseManager, SubstrateBlock } from "@subsquid/hydra-common";
 import { Entity } from "@subsquid/openreader/dist/model";
-import { CrowdloanStatus } from "../../constants";
+import { CROWDLOAN_STATUS } from "../../constants";
 import {
   Auction,
   AuctionParachain,
@@ -12,7 +12,7 @@ import {
   Token,
 } from "../../generated/model";
 import { apiService } from "./api";
-import { constTokenDetails } from "./constantAndDefault";
+import { TOKEN_DETAILS } from "./consistenecy";
 import { CrowdloanReturn, ParachainReturn } from "./types";
 import {
   fetchCrowdloan,
@@ -32,14 +32,14 @@ type Record<K extends keyof any, T> = {
 };
 
 export const timestampToDate = (block: SubstrateBlock): Date => {
-  return new Date(block.timestamp)
-}
+  return new Date(block.timestamp);
+};
 
-export async function getOrCreate<T extends { id: string }>(
+export const getOrCreate = async <T extends { id: string }>(
   store: DatabaseManager,
   entityConstructor: EntityConstructor<T>,
   id: string
-): Promise<T> {
+): Promise<T> => {
   let e = await store.get(entityConstructor, {
     where: { id },
   });
@@ -50,19 +50,19 @@ export async function getOrCreate<T extends { id: string }>(
   }
 
   return e;
-}
+};
 
-export async function get<T extends { id: string }>(
+export const get = async <T extends { id: string }>(
   store: DatabaseManager,
   entityConstructor: EntityConstructor<T>,
   id: string
-): Promise<T  | undefined> {
+): Promise<T | undefined> => {
   let e = await store.get(entityConstructor, {
     where: { id },
   });
 
   return e;
-}
+};
 
 export const getOrUpdate = async <T>(
   store: DatabaseManager,
@@ -110,8 +110,14 @@ export const fetchParachain = async (
   paraId: number,
   block: SubstrateBlock
 ): Promise<ParachainReturn | null> => {
+  /**
+   * Api changes as per the new AT syntax
+   */
   const api = await apiService();
-  const parachain = (await api.query.registrar.paras.at(block.hash,paraId)).toJSON() as unknown;
+  const apiAt = await api.at(block.hash);
+  const parachain = (
+    await apiAt.query.registrar.paras(paraId)
+  ).toJSON() as unknown;
 
   return parachain as ParachainReturn | null;
 };
@@ -144,7 +150,7 @@ export const getIsReCreateCrowdloan = async (
   });
   const isReCreateCrowdloan = !!(
     fund?.dissolvedBlock &&
-    fund?.status === CrowdloanStatus.DISSOLVED &&
+    fund?.status === CROWDLOAN_STATUS.DISSOLVED &&
     fund?.isFinished
   );
 
@@ -216,13 +222,12 @@ export const ensureFund = async (
 
   // token data check and creation
   let tokenData: Token | undefined = await store.get(Token, {
-    where: { id: constTokenDetails.id }  // This is temporary until we got way to get the chain id and token id
+    where: { id: TOKEN_DETAILS.id }, // This is temporary until we got way to get the chain id and token id
   });
 
   if (!tokenData) {
-    tokenData = new Token(constTokenDetails);
+    tokenData = new Token(TOKEN_DETAILS);
     await store.save(tokenData);
-    console.log(`[TOKEN]: ${tokenData.id} saved successfully`);
   }
 
   return getOrUpdate<Crowdloan>(store, Crowdloan, fundId, test, (cur: any) => {
@@ -231,11 +236,11 @@ export const ensureFund = async (
           id: fundId,
           parachain: parachain[0],
           paraId: paraId.toString(),
-          tokenId: tokenData?.id.toString() || constTokenDetails.id,
+          tokenId: tokenData?.id || TOKEN_DETAILS.id,
           ...rest,
           firstSlot: firstPeriod,
           lastSlot: lastPeriod,
-          status: CrowdloanStatus.STARTED,
+          status: CROWDLOAN_STATUS.STARTED,
           raised: parseNumber(raised) as unknown as bigint,
           cap: parseNumber(cap) as unknown as bigint,
           lockExpiredBlock: end,
@@ -268,50 +273,64 @@ export const getAuctionsByOngoing = async (
   return records.map((record) => create(record, Auction)) as Auction[];
 };
 
-export const getByLeaseRange = async (store: DatabaseManager, leaseRange: string): Promise<ParachainLeases[] | undefined> => {
+export const getByLeaseRange = async (
+  store: DatabaseManager,
+  leaseRange: string
+): Promise<ParachainLeases[] | undefined> => {
   const records = await store.find(ParachainLeases, {
     where: { leaseRange },
     take: 1,
   });
 
-  return records.map((record: any )=> create(record, ParachainLeases));
-}
+  return records.map((record: any) => create(record, ParachainLeases));
+};
 
-export const getByWinningAuction = async (store: DatabaseManager, winningAuction: number): Promise<Bid[] | undefined> => {
+export const getByWinningAuction = async (
+  store: DatabaseManager,
+  winningAuction: number
+): Promise<Bid[] | undefined> => {
   const records = await store.find(Bid, {
     where: { winningAuction },
     take: 1,
   });
 
-  return records.map((record: any )=> create(record, Bid));
-}
+  return records.map((record: any) => create(record, Bid));
+};
 
-export const getByAuctionParachain = async (store: DatabaseManager, id:string): Promise<AuctionParachain[] | undefined> => {
+export const getByAuctionParachain = async (
+  store: DatabaseManager,
+  id: string
+): Promise<AuctionParachain[] | undefined> => {
   const records = await store.find(AuctionParachain, {
     where: { id },
     take: 1,
   });
 
-  return records.map((record: any ) => create(record, AuctionParachain));
-}
+  return records.map((record: any) => create(record, AuctionParachain));
+};
 
-export const getByAuctions = async (store: DatabaseManager, id:string): Promise<Auction[] | undefined> => {
+export const getByAuctions = async (
+  store: DatabaseManager,
+  id: string
+): Promise<Auction[] | undefined> => {
   const records = await store.find(Auction, {
     where: { id },
     take: 1,
   });
 
-  if (records){
-    return records.map((record: any ) => create(record, Auction));
-  }else{
-      return;
+  if (records) {
+    return records.map((record: any) => create(record, Auction));
+  } else {
+    return;
   }
-}
+};
 
-export const create = <T>(record: any, entityConstructor: EntityConstructor<T>) => {
+export const create = <T>(
+  record: any,
+  entityConstructor: EntityConstructor<T>
+) => {
   let entity = new entityConstructor(record.id);
   Object.assign(entity, record);
 
   return entity;
 };
-

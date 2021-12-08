@@ -1,30 +1,52 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
-import { ChronicleKey, IgnoreParachainIds } from "../constants";
-import { Auction, Chronicle, Parachain, ParachainLeases } from "../generated/model";
+import { CHRONICLE_KEY, IGNORE_PARACHAIN_IDS } from "../constants";
+import {
+  Auction,
+  Chronicle,
+  Parachain,
+  ParachainLeases,
+} from "../generated/model";
 import { Slots } from "../types";
 import { apiService } from "./helpers/api";
-import { ensureFund, ensureParachain, getOrCreate, getOrUpdate, isFundAddress } from "./helpers/common";
-import { CrowdloanStatus } from "../constants";
+import {
+  ensureFund,
+  ensureParachain,
+  getOrUpdate,
+  isFundAddress,
+} from "./helpers/common";
+import { CROWDLOAN_STATUS } from "../constants";
 import { parseNumber } from "./helpers/utils";
 
-//reviewed
-export async function handleSlotsLeased({
+let leasePeriod: number;
+
+const getLeasePeriod = async (hash: string): Promise<number> => {
+  if (!leasePeriod) {
+    const api = await apiService();
+    const apiAt = await api.at(hash);
+    leasePeriod = (apiAt.consts.slots?.leasePeriod.toJSON() as number) || -1;
+  }
+  return leasePeriod;
+};
+
+export const handleSlotsLeased = async ({
   store,
   event,
   block,
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Slots] [Leased] Event Started.`);
-
+}: EventContext & StoreContext): Promise<void> => {
   const blockNum = block.height;
-  const [paraId, from, firstLease, leaseCount, extra, total] = new Slots.LeasedEvent(event).params;
+  const [paraId, from, firstLease, leaseCount, extra, total] =
+    new Slots.LeasedEvent(event).params;
   const lastLease = firstLease.toNumber() + leaseCount.toNumber() - 1;
 
-  if (IgnoreParachainIds.includes(paraId.toNumber())) {
-    console.info(`Ignore testing parachain ${paraId}`);
+  if (IGNORE_PARACHAIN_IDS.includes(paraId.toNumber())) {
     return;
   }
 
-  const { id: parachainId } = await ensureParachain(paraId.toNumber(), store, block);
+  const { id: parachainId } = await ensureParachain(
+    paraId.toNumber(),
+    store,
+    block
+  );
   const totalUsed = parseNumber(total.toString());
   const extraAmount = parseNumber(extra.toString());
 
@@ -40,7 +62,6 @@ export async function handleSlotsLeased({
   };
 
   if (curAuction.id === "unknown") {
-    console.info("No active auction found, sudo or system parachain, upsert unknown Auction");
     await getOrUpdate(store, Auction, "unknown", {
       id: "unknown",
       blockNum,
@@ -54,12 +75,10 @@ export async function handleSlotsLeased({
   }
 
   const fundAddress = await isFundAddress(from.toString());
-  console.info(`handleSlotsLeased isFundAddress - from: ${from} - ${fundAddress}`);
 
   if (fundAddress) {
-    console.info(`handleSlotsLeased update - parachain ${paraId} from Started to Won status`);
-    await ensureFund(paraId.toNumber(), store,block, {
-      status: CrowdloanStatus.WON,
+    await ensureFund(paraId.toNumber(), store, block, {
+      status: CROWDLOAN_STATUS.WON,
       wonAuctionId: curAuction.id,
       leaseExpiredBlock: curAuction.leaseEnd,
     }).catch((err) => {
@@ -79,11 +98,11 @@ export async function handleSlotsLeased({
     take: 1,
   });
 
-  console.info(`Resolved auction id ${curAuction.id}, resultBlock: ${curAuction.id}, ${curAuction.resultBlock}`);
-
-  await getOrUpdate( store, ParachainLeases, `${paraId}-${auctionId || "sudo"}-${firstLease}-${lastLease}`,
-   {
-      // id: `${paraId}-${firstLease}-${lastLease}-${auctionId || "sudo"}`,
+  await getOrUpdate(
+    store,
+    ParachainLeases,
+    `${paraId}-${auctionId || "sudo"}-${firstLease}-${lastLease}`,
+    {
       paraId,
       parachain: parachain[0],
       leaseRange: `${auctionId || "sudo"}-${firstLease}-${lastLease}`,
@@ -98,31 +117,25 @@ export async function handleSlotsLeased({
       wonBidFrom: from.toString(),
       winningResultBlock: resultBlock,
       hasWon: true,
-    }).catch((err) => {
+    }
+  ).catch((err) => {
     console.error(`Upsert ParachainLeases failed ${err}`);
   });
+};
 
-  console.info(` ------ [Slots] [Leased] Event Completed.`);
-}
-
-// Finished Review
-export async function handleNewLeasePeriod({
+export const handleNewLeasePeriod = async ({
   store,
   event,
   block,
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Slots] [NewLeasePeriod] Event Started.`);
-
+}: EventContext & StoreContext): Promise<void> => {
   const [leaseIdx] = new Slots.NewLeasePeriodEvent(event).params;
-  const api = await apiService();
-  const leasePeriod = api.consts.slots.leasePeriod.toJSON() as number;
+  leasePeriod = leasePeriod || (await getLeasePeriod(block.hash));
   const timestamp: number = Math.round(block.timestamp / 1000);
   let newValue = {
-curLease: leaseIdx.toNumber(),
-curLeaseStart: timestamp,
-curLeaseEnd: timestamp + leasePeriod - 1
-}
+    curLease: leaseIdx.toNumber(),
+    curLeaseStart: timestamp,
+    curLeaseEnd: timestamp + leasePeriod - 1,
+  };
 
-  await getOrUpdate(store,Chronicle,ChronicleKey,newValue)
-  console.info(` ------ [Slots] [NewLeasePeriod] Event Completed.`);
-}
+  await getOrUpdate(store, Chronicle, CHRONICLE_KEY, newValue);
+};

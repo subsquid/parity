@@ -14,7 +14,7 @@ export class Transfer {
   senderAccount!: string
 
   @Column_("text", {nullable: false})
-  reveiverAccount!: string
+  receiverAccount!: string
 
   @Column_("text", {nullable: false})
   tokenId!: string

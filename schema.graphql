@@ -110,7 +110,7 @@ type Contribution @entity {
 }
 
 type Chronicle @entity {
-  id: ID! # Static 'ChronicleKey'
+  id: ID! # Static 'CHRONICLE_KEY'
   curAuction: Auction
   curAuctionId: String
   curBlockNum: Int
@@ -153,7 +153,7 @@ type Balance @entity {
 type Transfer @entity {
     id: ID!
     senderAccount: String!
-    reveiverAccount: String!
+    receiverAccount: String!
     tokenId: String!
     amount: BigInt!
     timestamp: DateTime!
