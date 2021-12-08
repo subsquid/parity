@@ -1,11 +1,11 @@
-export const constTokenDetails = {
+export const TOKEN_DETAILS = {
   id: "KSM",
   tokenName: "KUSAMA",
 };
 
-export const constChainDetails = {
+export const CHAIN_DETAILS = {
   id: "1",
-  tokenId: constTokenDetails.id,
+  tokenId: TOKEN_DETAILS.id,
   chainName: "mainchain",
   relayId: "relay-1",
   relayChain: "relay-kusama-chain",

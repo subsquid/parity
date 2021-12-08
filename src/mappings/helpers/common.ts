@@ -12,7 +12,7 @@ import {
   Token,
 } from "../../generated/model";
 import { apiService } from "./api";
-import { constTokenDetails } from "./consistenecy";
+import { TOKEN_DETAILS } from "./consistenecy";
 import { CrowdloanReturn, ParachainReturn } from "./types";
 import {
   fetchCrowdloan,
@@ -222,11 +222,11 @@ export const ensureFund = async (
 
   // token data check and creation
   let tokenData: Token | undefined = await store.get(Token, {
-    where: { id: constTokenDetails.id }, // This is temporary until we got way to get the chain id and token id
+    where: { id: TOKEN_DETAILS.id }, // This is temporary until we got way to get the chain id and token id
   });
 
   if (!tokenData) {
-    tokenData = new Token(constTokenDetails);
+    tokenData = new Token(TOKEN_DETAILS);
     await store.save(tokenData);
   }
 
@@ -236,7 +236,7 @@ export const ensureFund = async (
           id: fundId,
           parachain: parachain[0],
           paraId: paraId.toString(),
-          tokenId: tokenData?.id || constTokenDetails.id,
+          tokenId: tokenData?.id || TOKEN_DETAILS.id,
           ...rest,
           firstSlot: firstPeriod,
           lastSlot: lastPeriod,

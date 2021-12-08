@@ -7,7 +7,7 @@ import {
 import { Account, Balance, Chain, Token, Transfer } from "../generated/model";
 import { Balances } from "../types";
 import { getOrCreate, timestampToDate } from "./helpers/common";
-import { constChainDetails, constTokenDetails } from "./helpers/consistenecy";
+import { CHAIN_DETAILS, TOKEN_DETAILS } from "./helpers/consistenecy";
 
 export const handleTransfer = async ({
   store,
@@ -39,11 +39,11 @@ export const handleTransfer = async ({
 
     // token data check and creation
     let tokenData: Token | undefined = await store.get(Token, {
-      where: { id: constTokenDetails.id }, // This is temporary until we got way to get the chain id and token id
+      where: { id: TOKEN_DETAILS.id }, // This is temporary until we got way to get the chain id and token id
     });
 
     if (!tokenData) {
-      tokenData = new Token(constTokenDetails);
+      tokenData = new Token(TOKEN_DETAILS);
       await store.save(tokenData);
     }
 
@@ -83,23 +83,23 @@ const handleAccountAndBalance = async (
 
     // token data check and creation
     let tokenData: Token | undefined = await store.get(Token, {
-      where: { id: constTokenDetails.id }, // This is temporary until we got way to get the chain id and token id
+      where: { id: TOKEN_DETAILS.id }, // This is temporary until we got way to get the chain id and token id
     });
 
     if (!tokenData) {
-      tokenData = new Token(constTokenDetails);
+      tokenData = new Token(TOKEN_DETAILS);
       await store.save(tokenData);
     }
 
     // chain data check and creation
-    const chainID = `${block.height}-${who}` || constChainDetails.id;
+    const chainID = `${block.height}-${who}` || CHAIN_DETAILS.id;
     let chainData: Chain | undefined = await store.get(Chain, {
       where: { id: chainID }, // This is temporary until we got way to get the chain id and token id
     });
 
     if (!chainData) {
-      constChainDetails.id = chainID;
-      chainData = new Chain(constChainDetails);
+      CHAIN_DETAILS.id = chainID;
+      chainData = new Chain(CHAIN_DETAILS);
       await store.save(chainData);
     }
 
