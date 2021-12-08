@@ -15,10 +15,7 @@ export const handleParachainRegistered = async ({
     Parachain,
     `${paraId}-${managerId.toString()}`
   );
-
-  /**
-   * Api changes as per the new AT syntax
-   */
+  
   const api = await apiService();
   const apiAt = await api.at(block.hash);
   const { deposit } =
