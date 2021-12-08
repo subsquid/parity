@@ -1,5 +1,5 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
-import { ChronicleKey, IgnoreParachainIds } from "../constants";
+import { CHRONICLE_KEY, IGINORE_PARACHAIN_IDS } from "../constants";
 import {
   Auction,
   Chronicle,
@@ -14,7 +14,7 @@ import {
   getOrUpdate,
   isFundAddress,
 } from "./helpers/common";
-import { CrowdloanStatus } from "../constants";
+import { CROWDLOAN_STATUS } from "../constants";
 import { parseNumber } from "./helpers/utils";
 
 let leasePeriod: number;
@@ -38,7 +38,7 @@ export const handleSlotsLeased = async ({
     new Slots.LeasedEvent(event).params;
   const lastLease = firstLease.toNumber() + leaseCount.toNumber() - 1;
 
-  if (IgnoreParachainIds.includes(paraId.toNumber())) {
+  if (IGINORE_PARACHAIN_IDS.includes(paraId.toNumber())) {
     return;
   }
 
@@ -78,7 +78,7 @@ export const handleSlotsLeased = async ({
 
   if (fundAddress) {
     await ensureFund(paraId.toNumber(), store, block, {
-      status: CrowdloanStatus.WON,
+      status: CROWDLOAN_STATUS.WON,
       wonAuctionId: curAuction.id,
       leaseExpiredBlock: curAuction.leaseEnd,
     }).catch((err) => {
@@ -137,5 +137,5 @@ export const handleNewLeasePeriod = async ({
     curLeaseEnd: timestamp + leasePeriod - 1,
   };
 
-  await getOrUpdate(store, Chronicle, ChronicleKey, newValue);
+  await getOrUpdate(store, Chronicle, CHRONICLE_KEY, newValue);
 };

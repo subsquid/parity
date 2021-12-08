@@ -110,7 +110,7 @@ type Contribution @entity {
 }
 
 type Chronicle @entity {
-  id: ID! # Static 'ChronicleKey'
+  id: ID! # Static 'CHRONICLE_KEY'
   curAuction: Auction
   curAuctionId: String
   curBlockNum: Int

@@ -1,6 +1,6 @@
 import { DatabaseManager, SubstrateBlock } from "@subsquid/hydra-common";
 import { Entity } from "@subsquid/openreader/dist/model";
-import { CrowdloanStatus } from "../../constants";
+import { CROWDLOAN_STATUS } from "../../constants";
 import {
   Auction,
   AuctionParachain,
@@ -150,7 +150,7 @@ export const getIsReCreateCrowdloan = async (
   });
   const isReCreateCrowdloan = !!(
     fund?.dissolvedBlock &&
-    fund?.status === CrowdloanStatus.DISSOLVED &&
+    fund?.status === CROWDLOAN_STATUS.DISSOLVED &&
     fund?.isFinished
   );
 
@@ -240,7 +240,7 @@ export const ensureFund = async (
           ...rest,
           firstSlot: firstPeriod,
           lastSlot: lastPeriod,
-          status: CrowdloanStatus.STARTED,
+          status: CROWDLOAN_STATUS.STARTED,
           raised: parseNumber(raised) as unknown as bigint,
           cap: parseNumber(cap) as unknown as bigint,
           lockExpiredBlock: end,

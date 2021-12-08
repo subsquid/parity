@@ -6,7 +6,7 @@ import {
   Parachain,
   Crowdloan as CrowdloanModel,
 } from "../generated/model";
-import { CrowdloanStatus } from "../constants";
+import { CROWDLOAN_STATUS } from "../constants";
 import { Crowdloan } from "../types";
 
 export const handleCrowdloanCreated = async ({
@@ -58,7 +58,7 @@ export const handleCrowdloanDissolved = async ({
   const blockNum = block.height;
   const [fundId] = new Crowdloan.DissolvedEvent(event).params;
   await ensureFund(fundId.toNumber(), store, block, {
-    status: CrowdloanStatus.DISSOLVED,
+    status: CROWDLOAN_STATUS.DISSOLVED,
     isFinished: true,
     updatedAt: new Date(createdAt),
     dissolvedBlock: blockNum,

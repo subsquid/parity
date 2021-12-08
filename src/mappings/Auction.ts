@@ -15,7 +15,7 @@ import {
 } from "../generated/model";
 import { Auctions } from "../types";
 import { apiService } from "./helpers/api";
-import { ChronicleKey } from "../constants";
+import { CHRONICLE_KEY } from "../constants";
 import {
   ensureFund,
   ensureParachain,
@@ -75,7 +75,7 @@ export const handleAuctionStarted = async ({
   auction.ongoing = true;
   await store.save(auction);
 
-  const chronicle = await get(store, Chronicle, "ChronicleKey");
+  const chronicle = await get(store, Chronicle, "CHRONICLE_KEY");
   if (!chronicle) {
     console.error("Chronicle not defined. Exiting");
     process.exit(1);
@@ -102,7 +102,7 @@ export const handleAuctionClosed = async ({
 
   await store.save(auction);
 
-  const chronicle = await get(store, Chronicle, "ChronicleKey");
+  const chronicle = await get(store, Chronicle, "CHRONICLE_KEY");
   if (!chronicle) {
     console.error("Chronicle not defined. Exiting");
     process.exit(1);
@@ -287,7 +287,7 @@ export const updateBlockNum = async (
   block: SubstrateBlock,
   store: DatabaseManager
 ) => {
-  await getOrUpdate<Chronicle>(store, Chronicle, ChronicleKey, {
+  await getOrUpdate<Chronicle>(store, Chronicle, CHRONICLE_KEY, {
     curBlockNum: block.height,
   });
 };
@@ -299,7 +299,7 @@ export const updateWinningBlocks = async (
   const { curAuctionId, curBlockNum } =
     (
       await store.find(Chronicle, {
-        where: { id: ChronicleKey },
+        where: { id: CHRONICLE_KEY },
       })
     )[0] || {};
   const { closingStart, closingEnd } =
