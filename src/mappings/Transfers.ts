@@ -52,7 +52,7 @@ export const handleTransfer = async ({
     transfer = new Transfer({
       id: block.height.toString(),
       senderAccount: from.toString(),
-      reveiverAccount: to.toString(),
+      receiverAccount: to.toString(),
       tokenId: tokenData.id,
       amount: value.toBigInt(),
       timestamp: timestampToDate(block),
