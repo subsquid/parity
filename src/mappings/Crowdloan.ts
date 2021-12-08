@@ -5,26 +5,22 @@ import { Contribution, Parachain, Crowdloan as CrowdloanModel } from "../generat
 import { CrowdloanStatus } from "../constants";
 import { Crowdloan } from "../types";
 
-export async function handleCrowdloanCreated({
+export const handleCrowdloanCreated = async ({
   store,
   event,
   block
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Crowdloan] [Created] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const [fundId] = new Crowdloan.CreatedEvent(event).params;
   await ensureParachain(fundId.toNumber(), store, block);
   await ensureFund(fundId.toNumber(), store, block, { blockNum: block.height });
-
-  console.info(` ------ [Crowdloan] [Created] Event Completed.`);
 };
 
-export async function handleCrowdloanContributed({
+export const handleCrowdloanContributed = async ({
   store,
   event,
   block
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Crowdloan] [Contributed] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const blockNum = block.height;
   const [contributorId, fundIdx, amount] = new Crowdloan.ContributedEvent(event).params;
@@ -33,6 +29,7 @@ export async function handleCrowdloanContributed({
   const fund = await ensureFund(fundIdx.toNumber(), store, block);
   const fundId = fund.id
   const crowdLoan = await get(store, CrowdloanModel, fundId);
+
   if (crowdLoan) {
     const contribution = new Contribution({
       id: `${blockNum}-${event.id}`,
@@ -46,17 +43,14 @@ export async function handleCrowdloanContributed({
     });
 
     await store.save(contribution);
-
-    console.info(` ------ [Crowdloan] [Contributed] Event Completed.`);
   }
 }
 
-export async function handleCrowdloanDissolved({
+export const handleCrowdloanDissolved = async ({
   store,
   event,
   block
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Crowdloan] [Dissolved] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const { timestamp: createdAt } = block;
   const blockNum = block.height;
@@ -67,6 +61,4 @@ export async function handleCrowdloanDissolved({
     updatedAt: new Date(createdAt),
     dissolvedBlock: blockNum,
   });
-
-  console.info(` ------ [Crowdloan] [Dissolved] Event Completed.`);
 }

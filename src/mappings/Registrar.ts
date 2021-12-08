@@ -4,12 +4,11 @@ import { Registrar } from "../types";
 import { apiService } from "./helpers/api";
 import { getOrCreate } from "./helpers/common";
 
-export async function handleParachainRegistered({
+export const handleParachainRegistered = async ({
   store,
   event,
   block,
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Registrar] [Registered] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const [paraId, managerId] = new Registrar.RegisteredEvent(event).params;
   const parachain = await getOrCreate(store, Parachain, `${paraId}-${managerId.toString()}`);
@@ -29,6 +28,4 @@ export async function handleParachainRegistered({
   parachain.deregistered = false;
 
   await store.save(parachain);
-
-  console.info(`new Parachain saved: ${JSON.stringify(parachain, null, 2)}`);
 }

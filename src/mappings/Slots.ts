@@ -9,27 +9,26 @@ import { parseNumber } from "./helpers/utils";
 
 let leasePeriod: number;
 
-const getLeasePeriod = async (): Promise<number> => {
+const getLeasePeriod = async (hash: string): Promise<number> => {
   if (!leasePeriod) {
     const api = await apiService();
-    leasePeriod = api.consts.slots.leasePeriod.toJSON() as number;
+    const apiAt = await api.at(hash);
+    leasePeriod = apiAt.consts.slots?.leasePeriod.toJSON() as number || -1;
   }
   return leasePeriod
 }
 
-export async function handleSlotsLeased({
+export const handleSlotsLeased = async ({
   store,
   event,
   block,
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Slots] [Leased] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const blockNum = block.height;
   const [paraId, from, firstLease, leaseCount, extra, total] = new Slots.LeasedEvent(event).params;
   const lastLease = firstLease.toNumber() + leaseCount.toNumber() - 1;
 
   if (IgnoreParachainIds.includes(paraId.toNumber())) {
-    console.info(`Ignore testing parachain ${paraId}`);
     return;
   }
 
@@ -49,7 +48,6 @@ export async function handleSlotsLeased({
   };
 
   if (curAuction.id === "unknown") {
-    console.info("No active auction found, sudo or system parachain, upsert unknown Auction");
     await getOrUpdate(store, Auction, "unknown", {
       id: "unknown",
       blockNum,
@@ -63,10 +61,8 @@ export async function handleSlotsLeased({
   }
 
   const fundAddress = await isFundAddress(from.toString());
-  console.info(`handleSlotsLeased isFundAddress - from: ${from} - ${fundAddress}`);
 
   if (fundAddress) {
-    console.info(`handleSlotsLeased update - parachain ${paraId} from Started to Won status`);
     await ensureFund(paraId.toNumber(), store, block, {
       status: CrowdloanStatus.WON,
       wonAuctionId: curAuction.id,
@@ -88,7 +84,6 @@ export async function handleSlotsLeased({
     take: 1,
   });
 
-  console.info(`Resolved auction id ${curAuction.id}, resultBlock: ${curAuction.id}, ${curAuction.resultBlock}`);
 
   await getOrUpdate(store, ParachainLeases, `${paraId}-${auctionId || "sudo"}-${firstLease}-${lastLease}`,
     {
@@ -109,19 +104,16 @@ export async function handleSlotsLeased({
     }).catch((err) => {
       console.error(`Upsert ParachainLeases failed ${err}`);
     });
-
-  console.info(` ------ [Slots] [Leased] Event Completed.`);
 }
 
-export async function handleNewLeasePeriod({
+export const handleNewLeasePeriod = async ({
   store,
   event,
   block,
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Slots] [NewLeasePeriod] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const [leaseIdx] = new Slots.NewLeasePeriodEvent(event).params;
-  leasePeriod = leasePeriod || await getLeasePeriod();
+  leasePeriod = leasePeriod || await getLeasePeriod(block.hash);
   const timestamp: number = Math.round(block.timestamp / 1000);
   let newValue = {
     curLease: leaseIdx.toNumber(),
@@ -130,5 +122,4 @@ export async function handleNewLeasePeriod({
   }
 
   await getOrUpdate(store, Chronicle, ChronicleKey, newValue)
-  console.info(` ------ [Slots] [NewLeasePeriod] Event Completed.`);
 }

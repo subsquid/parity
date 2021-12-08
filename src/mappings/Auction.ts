@@ -7,29 +7,29 @@ import { ensureFund, ensureParachain, get, getByAuctionParachain, getByAuctions,
 
 let periodData: number[];
 
-const getLeasePeriod = async (): Promise<number[]> => {
+const getLeasePeriod = async (hash: string): Promise<number[]> => {
   if (!periodData || periodData.length === 0) {
     const api = await apiService();
-    const endingPeriod = api.consts.auctions.endingPeriod.toJSON() as number;
-    const leasePeriod = api.consts.slots.leasePeriod.toJSON() as number;
-    const periods = api.consts.auctions.leasePeriodsPerSlot.toJSON() as number;
+    const apiAt = await api.at(hash);
+    const endingPeriod = apiAt.consts.auctions?.endingPeriod.toJSON() as number || -1;
+    const leasePeriod = apiAt.consts.slots?.leasePeriod.toJSON() as number || -1;
+    const periods = apiAt.consts.auctions?.leasePeriodsPerSlot.toJSON() as number || -1;
     periodData = [endingPeriod, leasePeriod, periods];
   }
   return periodData
 }
 
-export async function handlerEmpty() { };
+export const handlerEmpty = async () => { };
 
-export async function handleAuctionStarted({
+export const handleAuctionStarted = async ({
   store,
   event,
   block
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Auctions] [AuctionStarted] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const [auctionId, slotStart, auctionEnds] = new Auctions.AuctionStartedEvent(event).params;
 
-  periodData = (!periodData || periodData.length === 0) ? await getLeasePeriod() : periodData;
+  periodData = (!periodData || periodData.length === 0) ? await getLeasePeriod(block.hash) : periodData;
 
   const auction = await getOrCreate(store, Auction, auctionId.toString());
 
@@ -53,15 +53,13 @@ export async function handleAuctionStarted({
   chronicle.curAuctionId = auctionId.toString();
   await store.save(chronicle);
 
-  console.info(` ------ [Auctions] [AuctionStarted] Event Completed.`);
 }
 
-export async function handleAuctionClosed({
+export const handleAuctionClosed = async ({
   store,
   event,
   block,
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Auctions] [AuctionClosed] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const [auctionId] = new Auctions.AuctionClosedEvent(event).params;
   const auction = await get(store, Auction, auctionId.toString());
@@ -83,16 +81,13 @@ export async function handleAuctionClosed({
   }
   chronicle.curAuctionId = null
   await store.save(chronicle);
-
-  console.info(` ------ [Auctions] [AuctionClosed] Event Completed.`);
 }
 
-export async function handleAuctionWinningOffset({
+export const handleAuctionWinningOffset = async ({
   store,
   event,
   block,
-}: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Auctions] [WinningOffset] Event Started.`);
+}: EventContext & StoreContext): Promise<void> => {
 
   const [auctionId, offsetBlock] = new Auctions.WinningOffsetEvent(event).params;
   const auction = await store.find(Auction, {
@@ -105,13 +100,9 @@ export async function handleAuctionWinningOffset({
   if (auction.length != 0) {
     let auctionData = auction[0]
     auctionData.resultBlock = auctionData.closingStart + offsetBlock.toNumber();
-    console.info(`Update auction ${auctionId} winning offset: ${auctionData.resultBlock}`);
     await store.save(auctionData);
   }
-
-  console.info(` ------ [Auctions] [WinningOffset] Event Completed.`);
 };
-
 
 const markLosingBids = async (auctionId: number, slotStart: number, slotEnd: number, winningBidId: string, store: DatabaseManager) => {
   const winningBids = (await store.find(Bid, {
@@ -123,7 +114,6 @@ const markLosingBids = async (auctionId: number, slotStart: number, slotEnd: num
   for (const bid of losingBids) {
     bid.winningAuction = null;
     await store.save(bid)
-    console.info(`Mark Bid as losing bid ${bid.id}`);
   }
 };
 
@@ -145,8 +135,7 @@ const markParachainLeases = async (
   const losingLeases = winningLeases?.filter((lease) => lease.paraId !== paraId) || []
   for (const lease of losingLeases) {
     lease.activeForAuction = null;
-    store.save(lease)
-    console.info(`Mark losing parachain leases ${lease.paraId} for ${lease.leaseRange}`);
+    await store.save(lease)
   }
   const parachain = await store.find(Parachain, {
     where: { id: parachainId }

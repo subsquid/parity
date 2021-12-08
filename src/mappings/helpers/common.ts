@@ -12,7 +12,7 @@ import {
   Token,
 } from "../../generated/model";
 import { apiService } from "./api";
-import { constTokenDetails } from "./constantAndDefault";
+import { constTokenDetails } from "./consistenecy";
 import { CrowdloanReturn, ParachainReturn } from "./types";
 import {
   fetchCrowdloan,
@@ -35,11 +35,11 @@ export const timestampToDate = (block: SubstrateBlock): Date => {
   return new Date(block.timestamp)
 }
 
-export async function getOrCreate<T extends { id: string }>(
+export const getOrCreate = async <T extends { id: string }>(
   store: DatabaseManager,
   entityConstructor: EntityConstructor<T>,
   id: string
-): Promise<T> {
+): Promise<T> => {
   let e = await store.get(entityConstructor, {
     where: { id },
   });
@@ -52,11 +52,11 @@ export async function getOrCreate<T extends { id: string }>(
   return e;
 }
 
-export async function get<T extends { id: string }>(
+export const get = async <T extends { id: string }>(
   store: DatabaseManager,
   entityConstructor: EntityConstructor<T>,
   id: string
-): Promise<T | undefined> {
+): Promise<T | undefined> => {
   let e = await store.get(entityConstructor, {
     where: { id },
   });
@@ -234,7 +234,7 @@ export const ensureFund = async (
         id: fundId,
         parachain: parachain[0],
         paraId: paraId.toString(),
-        tokenId: tokenData?.id.toString() || constTokenDetails.id,
+        tokenId: tokenData?.id || constTokenDetails.id,
         ...rest,
         firstSlot: firstPeriod,
         lastSlot: lastPeriod,
