@@ -80,10 +80,6 @@ const handleAccountAndBalance = async (
   let balanceValue: bigint = balance?.freeBalance || 0n;
   balanceValue = isFrom ? balanceValue - value - tip : balanceValue + value;
 
-  let account = await store.get(Account, {
-    where: { id: who },
-  });
-
   // token data check and creation
   let tokenData: Token | undefined = await store.get(Token, {
     where: { id: TOKEN_DETAILS.id }, // This is temporary until we got way to get the chain id and token id
@@ -108,6 +104,10 @@ const handleAccountAndBalance = async (
     await store.save(chainData);
   }
 
+  let account = await store.get(Account, {
+    where: { id: who },
+  });
+  
   // account data check and creation
   if (!account) {
     account = new Account({
