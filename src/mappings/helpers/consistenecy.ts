@@ -6,7 +6,7 @@ export const TOKEN_DETAILS = {
 export const CHAIN_DETAILS = {
   id: "1",
   tokenId: TOKEN_DETAILS.id,
-  chainName: "mainchain",
-  relayId: "relay-1",
-  relayChain: "relay-kusama-chain",
+  chainName: "Kusama",
+  relayId: "Kusama",
+  relayChain: "kusama-relay-chain",
 };

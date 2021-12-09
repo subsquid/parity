@@ -26,6 +26,10 @@ mappings:
       handler: handleParachainRegistered
     - event: balances.Transfer
       handler: handleTransfer
+    - event: staking.Bonded
+      handler: handleBondedBalance
+    - event: staking.Unbonded
+      handler: handleUnBondedBalance
     - event: crowdloan.Created
       handler: handleCrowdloanCreated
     - event: auctions.AuctionStarted

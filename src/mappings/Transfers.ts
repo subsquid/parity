@@ -16,6 +16,7 @@ export const handleTransfer = async ({
   extrinsic,
 }: EventContext & StoreContext): Promise<void> => {
   const [from, to, value] = new Balances.TransferEvent(event).params;
+  const tip = extrinsic?.tip || 0n
 
   let transfer = await store.get(Transfer, {
     where: { id: block.height.toString() },
@@ -25,16 +26,18 @@ export const handleTransfer = async ({
     await handleAccountAndBalance(
       store,
       block,
-      from.toHex(),
+      from.toString(),
       value.toBigInt(),
-      true
+      true,
+      tip
     );
     await handleAccountAndBalance(
       store,
       block,
-      to.toHex(),
+      to.toString(),
       value.toBigInt(),
-      false
+      false,
+      tip
     );
 
     // token data check and creation
@@ -67,14 +70,15 @@ const handleAccountAndBalance = async (
   block: SubstrateBlock,
   who: string,
   value: bigint,
-  isFrom: boolean
+  isFrom: boolean,
+  tip: bigint
 ) => {
   let balance = await store.get(Balance, {
     where: { accountId: who },
   });
 
   let balanceValue: bigint = balance?.freeBalance || 0n;
-  balanceValue = isFrom ? balanceValue - value : balanceValue + value;
+  balanceValue = isFrom ? balanceValue - value - tip : balanceValue + value;
 
   if (!balance) {
     let account = await store.get(Account, {
@@ -92,13 +96,15 @@ const handleAccountAndBalance = async (
     }
 
     // chain data check and creation
-    const chainID = `${block.height}-${who}` || CHAIN_DETAILS.id;
+    // const chainID = `${block.height}-${who}` || CHAIN_DETAILS.id;
     let chainData: Chain | undefined = await store.get(Chain, {
-      where: { id: chainID }, // This is temporary until we got way to get the chain id and token id
+      // where: { id: chainID }, // This is temporary until we got way to get the chain id and token id
+      where: { id: CHAIN_DETAILS.id }, // This is temporary until we got way to get the chain id and token id
     });
 
     if (!chainData) {
-      CHAIN_DETAILS.id = chainID;
+      // CHAIN_DETAILS.id = chainID;
+      CHAIN_DETAILS.id = CHAIN_DETAILS.id;
       chainData = new Chain(CHAIN_DETAILS);
       await store.save(chainData);
     }
@@ -107,7 +113,7 @@ const handleAccountAndBalance = async (
     if (!account) {
       account = new Account({
         id: who,
-        chainId: tokenData.id,
+        chainId: CHAIN_DETAILS.id,
         balance: balanceValue,
       });
     } else {
@@ -122,13 +128,55 @@ const handleAccountAndBalance = async (
       accountId: account.id,
       tokenId: tokenData.id,
       timestamp: timestampToDate(block),
-      freeBalance: 0n,
-      bondedBalance: balanceValue,
+      freeBalance: balanceValue,
+      bondedBalance: 0n,
     });
 
     await store.save(balance);
   } else {
-    balance.bondedBalance = balanceValue;
+    balance.freeBalance = balanceValue;
     await store.save(balance);
   }
 };
+
+
+export const handleBondedBalance = async ({
+  store,
+  event,
+  block,
+  extrinsic,
+}: EventContext & StoreContext): Promise<void> => {
+  const [accountId, bondedAmount] = new Balances.BondedEvent(event).params;
+
+  let balance: Balance | undefined = await store.get(Balance, {
+    where: { accountId: accountId.toString() },
+  });
+
+  if (balance) {
+    let bondedBalance: bigint = balance.bondedBalance || 0n;
+    bondedBalance = bondedBalance + (bondedAmount.toBigInt() || 0n);
+    balance.bondedBalance = bondedBalance;
+    await store.save(balance);
+  }
+}
+
+export const handleUnBondedBalance = async ({
+  store,
+  event,
+  block,
+  extrinsic,
+}: EventContext & StoreContext): Promise<void> => {
+  const [accountId, bondedAmount] = new Balances.UnBondedEvent(event).params;
+
+
+  let balance: Balance | undefined = await store.get(Balance, {
+    where: { accountId: accountId.toString() },
+  });
+
+  if (balance) {
+    let bondedBalance: bigint = balance.bondedBalance || 0n;
+    bondedBalance = bondedBalance - (bondedAmount.toBigInt() || 0n);
+    balance.bondedBalance = bondedBalance;
+    await store.save(balance);
+  }
+}
