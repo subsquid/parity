@@ -7,7 +7,7 @@ export const ADDRESS_PREFIX  = 2
 export const STASH_FILES = ['0-1999.json','2000-3999.json','4000-5999.json','6000-7999.json','8000-9050.json',]
 
 export const NATIVE_TOKEN_DETAILS = {
-  id: "1",
+  id: "2",
   tokenSymbol: "KSM",
   tokenName: "Kusama",
 };
