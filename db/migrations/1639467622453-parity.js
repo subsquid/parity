@@ -1,13 +1,13 @@
 const { MigrationInterface, QueryRunner } = require("typeorm");
 
-module.exports = class parity1639447787597 {
-    name = 'parity1639447787597'
+module.exports = class parity1639467622453 {
+    name = 'parity1639467622453'
 
     async up(queryRunner) {
         await queryRunner.query(`CREATE TABLE "token" ("id" character varying NOT NULL, "token_symbol" text NOT NULL, "token_name" text NOT NULL, CONSTRAINT "PK_82fae97f905930df5d62a702fc9" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "chains" ("id" character varying NOT NULL, "chain_name" text, "relay_id" text NOT NULL, "relay_chain" boolean, "native_token_id" character varying NOT NULL, CONSTRAINT "PK_f3c6ca7e7ad0f451e3b8f3dd378" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_3ad731269d900793a90b3cbf1c" ON "chains" ("native_token_id") `);
-        await queryRunner.query(`CREATE TABLE "account" ("id" character varying NOT NULL, "account_id" text NOT NULL, "chain_id_id" character varying NOT NULL, CONSTRAINT "PK_54115ee388cdb6d86bb4bf5b2ea" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "account" ("id" character varying NOT NULL, "chain_id_id" character varying NOT NULL, CONSTRAINT "PK_54115ee388cdb6d86bb4bf5b2ea" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_161fdf1910711e5abe793eb543" ON "account" ("chain_id_id") `);
         await queryRunner.query(`CREATE TABLE "balance" ("id" character varying NOT NULL, "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL, "free_balance" numeric, "bonded_balance" numeric, "vested_balance" numeric, "account_id_id" character varying NOT NULL, "token_id_id" character varying NOT NULL, CONSTRAINT "PK_079dddd31a81672e8143a649ca0" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_17086e775fb038f8d6631ef7cc" ON "balance" ("account_id_id") `);

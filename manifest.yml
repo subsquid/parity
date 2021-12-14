@@ -3,8 +3,10 @@ description: Parity manifest
 
 typegen:
   outDir: src/types
+  blockHash: '0x703332e126b87658aa008507325627e837b0f7ed6d49d44a086d24b540bdd3ec'
   events:
-    # - registrar.Registered
+    - registrar.Registered
+    - balances.NewAccount
     - balances.Transfer
     - balances.Endowed
     - balances.DustLost
@@ -14,28 +16,30 @@ typegen:
     - balances.Deposit
     - balances.Withdraw
     - balances.Slashed
-    # - crowdloan.Created
-    # - auctions.AuctionStarted
-    # - auctions.AuctionClosed
-    # - auctions.WinningOffset
-    # - auctions.BidAccepted
-    # - auctions.Reserved
-    # - auctions.Unreserved
-    # - auctions.HandleBidResult
-    # - slots.Leased
-    # - slots.NewLeasePeriod
-    # - crowdloan.Contributed
-    # - crowdloan.Dissolved
+    - crowdloan.Created
+    - auctions.AuctionStarted
+    - auctions.AuctionClosed
+    - auctions.WinningOffset
+    - auctions.BidAccepted
+    - auctions.Reserved
+    - auctions.Unreserved
+    - auctions.HandleBidResult
+    - slots.Leased
+    - slots.NewLeasePeriod
+    - crowdloan.Contributed
+    - crowdloan.Dissolved
 
 mappings:
   mappingsModule: lib/mappings
   eventHandlers:
     # - event: registrar.Registered
     #   handler: handleParachainRegistered
+    - event: balances.NewAccount
+      handler: newAccountHandler
     - event: balances.Endowed
-      handler: accountCreatedHandler
-    # - event: balances.Transfer
-    #   handler: handleTransfer
+      handler: newAccountHandler
+    - event: balances.Transfer
+      handler: balanceTransfer
     # - event: staking.Bonded
     #   handler: handleBondedBalance
     # - event: staking.Unbonded

@@ -14,6 +14,13 @@ export namespace Balances {
       return [create('AccountId32', this.event.params[0].value), create('u128', this.event.params[1].value)]
     }
   }
+  export class NewAccountEvent {
+    constructor(private event: SubstrateEvent) {}
+
+    get params(): [AccountId32, u128] {
+      return [create('AccountId32', this.event.params[0].value), create('u128', this.event.params[1].value)]
+    }
+  }
 
   /**
    * An account was removed whose balance was non-zero but below ExistentialDeposit,

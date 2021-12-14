@@ -134,7 +134,7 @@ type Token @entity {
 }
 
 type Balance @entity {
-    id: ID!
+    id: ID! #Account-TokenId
     accountId: Account!
     tokenId: Token!
     timestamp: DateTime!
@@ -162,7 +162,6 @@ type Transfers @entity {
 }
 
 type Account @entity {
-    id: ID!
-    accountId: String!
+    id: ID! # Account Address
     chainId: Chains!
 }

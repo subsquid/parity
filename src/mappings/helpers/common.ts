@@ -1,97 +1,73 @@
-// import { DatabaseManager, SubstrateBlock } from "@subsquid/hydra-common";
-// import { Entity } from "@subsquid/openreader/dist/model";
-// import { CROWDLOAN_STATUS } from "../../constants";
-// import {
-//   Auction,
-//   AuctionParachain,
-//   Bid,
-//   Crowdloan,
-//   CrowdloanSequence,
-//   Parachain,
-//   ParachainLeases,
-//   Token,
-// } from "../../generated/model";
-// import { apiService } from "./api";
-// import { TOKEN_DETAILS } from "./consistenecy";
-// import { CrowdloanReturn, ParachainReturn } from "./types";
-// import {
-//   fetchCrowdloan,
-//   getParachainId,
-//   parseBigInt,
-//   parseNumber,
-// } from "./utils";
+import { DatabaseManager, SubstrateBlock } from "@subsquid/hydra-common";
 
-// type EntityConstructor<T> = {
-//   new (...args: any[]): T;
-// };
-// /**
-//  * Construct a type with a set of properties K of type T
-//  */
-// type Record<K extends keyof any, T> = {
-//   [P in K]: T;
-// };
+type EntityConstructor<T> = {
+  new (...args: any[]): T;
+};
+/**
+ * Construct a type with a set of properties K of type T
+ */
+type Record<K extends keyof any, T> = {
+  [P in K]: T;
+};
 
-// export const timestampToDate = (block: SubstrateBlock): Date => {
-//   return new Date(block.timestamp);
-// };
+export const timestampToDate = (block: SubstrateBlock): Date => {
+  return new Date(block.timestamp);
+};
 
-// export const getOrCreate = async <T extends { id: string }>(
-//   store: DatabaseManager,
-//   entityConstructor: EntityConstructor<T>,
-//   id: string
-// ): Promise<T> => {
-//   let e = await store.get(entityConstructor, {
-//     where: { id },
-//   });
+export const getOrCreate = async <T extends { id: string }>(
+  store: DatabaseManager,
+  entityConstructor: EntityConstructor<T>,
+  id: string
+): Promise<T> => {
+  let e = await store.get(entityConstructor, {
+    where: { id },
+  });
 
-//   if (e == null) {
-//     e = new entityConstructor();
-//     e.id = id;
-//   }
+  if (e == null) {
+    e = new entityConstructor();
+    e.id = id;
+  }
 
-//   return e;
-// };
+  return e;
+};
 
-// export const get = async <T extends { id: string }>(
-//   store: DatabaseManager,
-//   entityConstructor: EntityConstructor<T>,
-//   id: string
-// ): Promise<T | undefined> => {
-//   let e = await store.get(entityConstructor, {
-//     where: { id },
-//   });
+export const get = async <T extends { id: string }>(
+  store: DatabaseManager,
+  entityConstructor: EntityConstructor<T>,
+  id: string
+): Promise<T | null> => {
+  let e = await store.get(entityConstructor, {
+    where: { id },
+  });
 
-//   return e;
-// };
+  return e || null;
+};
 
-// export const getOrUpdate = async <T>(
-//   store: DatabaseManager,
-//   entityConstructor: EntityConstructor<T>,
-//   id: string,
-//   newValues: Record<string, any>,
-//   updateFn?: (entry?: T) => Omit<T, "save">
-// ): Promise<T> => {
-//   let e: any = await store.get(entityConstructor, {
-//     where: { id },
-//   });
-//   // if(!e){
-//   //   e = new entityConstructor({id})
-//   // }
-//   const updatedItem = e
-//     ? updateFn
-//       ? updateFn(e)
-//       : { ...e, ...newValues, id }
-//     : updateFn
-//     ? updateFn()
-//     : { ...newValues, id };
-//   e = e || new entityConstructor({ id });
-//   for (const property in updatedItem) {
-//     e[property] = updatedItem[property];
-//   }
+export const getOrUpdate = async <T>(
+  store: DatabaseManager,
+  entityConstructor: EntityConstructor<T>,
+  id: string,
+  newValues: Record<string, any>,
+  updateFn?: (entry?: T) => Omit<T, "save">
+): Promise<T> => {
+  let e: any = await store.get(entityConstructor, {
+    where: { id },
+  });
+  const updatedItem = e
+    ? updateFn
+      ? updateFn(e)
+      : { ...e, ...newValues, id }
+    : updateFn
+    ? updateFn()
+    : { ...newValues, id };
+  e = e || new entityConstructor({ id });
+  for (const property in updatedItem) {
+    e[property] = updatedItem[property];
+  }
 
-//   await store.save(e);
-//   return e;
-// };
+  await store.save(e);
+  return e;
+};
 
 // /**
 //  * @shalabh add description

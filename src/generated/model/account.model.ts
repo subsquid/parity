@@ -10,9 +10,6 @@ export class Account {
   @PrimaryColumn_()
   id!: string
 
-  @Column_("text", {nullable: false})
-  accountId!: string
-
   @Index_()
   @ManyToOne_(() => Chains, {nullable: false})
   chainId!: Chains
