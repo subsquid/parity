@@ -1,9 +1,8 @@
-import { Bool } from "@polkadot/types";
-import { Extrinsics } from "@polkadot/types/metadata/decorate/types";
 import { DatabaseManager, EventContext, ExtrinsicInfo, StoreContext, SubstrateBlock, SubstrateEvent, SubstrateExtrinsic } from "@subsquid/hydra-common";
 import { NATIVE_TOKEN_DETAILS, RELAY_CHAIN_DETAILS } from "../constants";
 import { Account, Balance, Chains, Token, Transfers } from "../generated/model";
 import { Balances } from "../types/Balances";
+import { allBlockExtrinsics, apiService } from "./helpers/api";
 import { get, getOrCreate, timestampToDate } from "./helpers/common";
 
 // Please Note
@@ -100,49 +99,6 @@ export const createNewAccount =async (
   return newAccount
 }
 
-// async function populateTransfer(
-//   event: SubstrateEvent,
-//   block: SubstrateBlock,
-//   extrinsic: SubstrateExtrinsic | undefined,
-//   store: DatabaseManager
-// ): Promise<void> {
-
-//   const transfer = new Transfers()
-//   element.timestamp = timestampToDate(block);
-//   element.blockNumber = blockNumber(event);
-//   if (extrinsic !== undefined && extrinsic !== null) {
-//     element.extrinsicHash = extrinsic.hash;
-//     element.extrinsicIdx = extrinsic.id;
-//   }
-//   const [from, to, value] = new Balances.TransferEvent(event).params
-//   const fees = await feeEventsToExtrinisicMap(block.height);
-//   let transfer: Transfer | undefined = await store.get(Transfer, {
-//     where: { extrinisicIdx: extrinsic?.id },
-//   })
-//   if (transfer == null) {
-//     transfer = new Transfer()
-//   }
-
-//   if (extrinsic?.id == undefined) {
-//     console.error(`extrinisic id undefined for transfer with event id = ${event.id}.Skipping it `)
-//     return
-//   }
-//   transfer.amount = value.toString();
-//   transfer.from = convertAddress(from.toString());
-//   transfer.to =  convertAddress(to.toString())
-//   transfer.fee = calculateFee(extrinsic as BlockExtrinisic,fees);
-//   transfer.extrinisicIdx = extrinsic?.id;
-//   transfer.eventIdx = event.id;
-//   transfer.success = true;
-//   transfer.id = event.id
-//   transfer.isTransferKeepAlive = extrinsic.method === 'transferKeepAlive'
-//   await store.save(transfer);
-
-//   element.item = new TransferItem({
-//     transfer: transfer.id
-//   })
-//   await store.save(element);
-// }
  
 export const newAccountHandler = async ({
   store,
@@ -151,9 +107,14 @@ export const newAccountHandler = async ({
   extrinsic
 }: EventContext & StoreContext): Promise<void> => {
   const [to, balance] = new Balances.NewAccountEvent(event).params;
-  let isTransfer: Boolean = false
+  let isTransfer:any
   if(extrinsic?.id){
-    isTransfer = extrinsic.method === 'transfer' && extrinsic.section === 'balances'
+    const allExtrinsic = await allBlockExtrinsics(block.height);
+    const currentExtrinsic = allExtrinsic.find((extrinsicItem) => 
+      extrinsicItem.id === extrinsic?.id)
+    isTransfer = currentExtrinsic && currentExtrinsic.substrate_events.find(
+      (eventItem) => eventItem.name === 'balances.transfer'
+    )
   } 
   if(isTransfer){
     // A new account can be created by a transfer also. This will be handled in balance

@@ -10,7 +10,7 @@ export const initializeConstantsHandler = async ({
       event,
       block,
     }: EventContext & StoreContext): Promise<void> => {
-        if(block.height > 10000){
+        if(block.height > 9051){
             return
         }
         console.log('Initializing Indexer with defaults')
