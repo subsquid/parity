@@ -129,6 +129,7 @@
 
 type Token @entity {
     id: ID!
+    tokenSymbol: String!
     tokenName: String!
 }
 

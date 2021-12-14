@@ -4,26 +4,36 @@ description: Parity manifest
 typegen:
   outDir: src/types
   events:
-    - registrar.Registered
+    # - registrar.Registered
     - balances.Transfer
-    - crowdloan.Created
-    - auctions.AuctionStarted
-    - auctions.AuctionClosed
-    - auctions.WinningOffset
-    - auctions.BidAccepted
-    - auctions.Reserved
-    - auctions.Unreserved
-    - auctions.HandleBidResult
-    - slots.Leased
-    - slots.NewLeasePeriod
-    - crowdloan.Contributed
-    - crowdloan.Dissolved
+    - balances.Endowed
+    - balances.DustLost
+    - balances.Reserved
+    - balances.UnReserved
+    - balances.ReserveRepatriated
+    - balances.Deposit
+    - balances.Withdraw
+    - balances.Slashed
+    # - crowdloan.Created
+    # - auctions.AuctionStarted
+    # - auctions.AuctionClosed
+    # - auctions.WinningOffset
+    # - auctions.BidAccepted
+    # - auctions.Reserved
+    # - auctions.Unreserved
+    # - auctions.HandleBidResult
+    # - slots.Leased
+    # - slots.NewLeasePeriod
+    # - crowdloan.Contributed
+    # - crowdloan.Dissolved
 
 mappings:
   mappingsModule: lib/mappings
   eventHandlers:
     # - event: registrar.Registered
     #   handler: handleParachainRegistered
+    - event: balances.Endowed
+      handler: accountCreatedHandler
     # - event: balances.Transfer
     #   handler: handleTransfer
     # - event: staking.Bonded
@@ -58,5 +68,6 @@ mappings:
 
   extrinsicHandlers:
   preBlockHooks:
+        - handler: initializeConstantsHandler
   postBlockHooks:
   # range: '[ 9034309, ]' # Auction startednewleas
