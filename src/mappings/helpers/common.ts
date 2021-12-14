@@ -1,4 +1,5 @@
 import { DatabaseManager, SubstrateBlock } from "@subsquid/hydra-common";
+import { encodeAddress } from "@polkadot/util-crypto";
 import { BlockEvent, BlockExtrinisic } from "./api";
 
 type EntityConstructor<T> = {
@@ -82,3 +83,7 @@ export function constructCache<T extends BlockExtrinisic| BlockEvent>(
     })
     return cache
   }
+
+  export function convertAddressToSubstrate(address: string) : string {
+    return encodeAddress(address, 42);
+}

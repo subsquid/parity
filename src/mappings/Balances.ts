@@ -70,7 +70,7 @@ export function getBalanceId(
 export const createNewAccount =async (
   accountId:string,
   freeBalance : bigint,
-  block: SubstrateBlock,
+  timestamp: Date,
   store: DatabaseManager) => {
   if(relayChain == undefined){
     await setRelayChain(store)
@@ -91,7 +91,7 @@ export const createNewAccount =async (
     bondedBalance: 0n,
     freeBalance: freeBalance,
     id: getBalanceId(accountId),
-    timestamp: timestampToDate(block),
+    timestamp: timestamp,
     tokenId: nativeToken,
     vestedBalance: 0n
   })
@@ -123,7 +123,7 @@ export const newAccountHandler = async ({
     return
   }
 
-  await createNewAccount(to.toString(),balance.toBigInt(), block, store)
+  await createNewAccount(to.toString(),balance.toBigInt(), timestampToDate(block), store)
 }
 
 
@@ -144,7 +144,7 @@ export const balanceTransfer = async ({
     process.exit(0)
   }
   if(accountTo == undefined){
-    accountTo = await createNewAccount(to.toString(),0n, block, store)
+    accountTo = await createNewAccount(to.toString(),0n, timestampToDate(block), store)
   }
   
   let [balanceFrom, balanceTo] = await Promise.all([
