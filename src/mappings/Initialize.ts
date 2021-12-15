@@ -142,6 +142,7 @@ export const initializeConstantsHandler = async ({
               allNewAccountPromises.push(createNewAccount(
                convertAddressToSubstrate(`${account.data[0]}`),
                 BigInt(account.data[1]),
+                0n,
                 new Date(timestamp.timestamps[blockElement.blockNumber].timestamp/ 1000),
                 store
               ));

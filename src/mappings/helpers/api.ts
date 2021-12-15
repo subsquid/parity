@@ -46,7 +46,7 @@ export interface BlockExtrinisic {
  
 }
 
-export const apiService =  async (blockHash?: string):Promise <ApiDecoration<"promise">> => {
+export const apiService =  async (blockHash?: string):Promise <ApiDecoration<"promise"> | any> => {
   
     if (blockHash === lastBlockHash){
       if(!apiAtBlock) {

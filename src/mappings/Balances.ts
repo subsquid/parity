@@ -4,6 +4,7 @@ import { Account, Balance, Chains, Token, Transfers } from "../generated/model";
 import { Balances } from "../types/Balances";
 import { allBlockExtrinsics, apiService } from "./helpers/api";
 import { get, getOrCreate, timestampToDate } from "./helpers/common";
+import { logErrorToFile } from "./helpers/log";
 
 // Please Note
 // Account Address would be stored in substrate format
@@ -70,6 +71,7 @@ export function getBalanceId(
 export const createNewAccount =async (
   accountId:string,
   freeBalance : bigint,
+  reserveBalance: bigint,
   timestamp: Date,
   store: DatabaseManager) => {
   if(relayChain == undefined){
@@ -88,7 +90,7 @@ export const createNewAccount =async (
   await store.save(newAccount)
   const balance = new Balance({
     accountId: newAccount,
-    bondedBalance: 0n,
+    bondedBalance: reserveBalance,
     freeBalance: freeBalance,
     id: getBalanceId(accountId),
     timestamp: timestamp,
@@ -123,7 +125,7 @@ export const newAccountHandler = async ({
     return
   }
 
-  await createNewAccount(to.toString(),balance.toBigInt(), timestampToDate(block), store)
+  await createNewAccount(to.toString(),balance.toBigInt(),0n, timestampToDate(block), store)
 }
 
 
@@ -141,10 +143,18 @@ export const balanceTransfer = async ({
   
   if(accountFrom == undefined){
     console.error('Account not found ',from.toString())
-    process.exit(0)
-  }
+    let api = await apiService()
+    const hash = await api.rpc.chain.getBlockHash(9577);
+    api = await api.at(hash)
+    const [free,reserve] = await Promise.all([
+      api.query.balances.freeBalance(from.toString()),
+      api.query.balances.reservedBalance(from.toString()),
+  ])
+  accountFrom = await createNewAccount(from.toString(),BigInt(free), BigInt(reserve),timestampToDate(block), store)
+  await logErrorToFile(`From Account ${from.toString()} not found at block ${block.height}`)
+}
   if(accountTo == undefined){
-    accountTo = await createNewAccount(to.toString(),0n, timestampToDate(block), store)
+    accountTo = await createNewAccount(to.toString(),0n,0n, timestampToDate(block), store)
   }
   
   let [balanceFrom, balanceTo] = await Promise.all([
