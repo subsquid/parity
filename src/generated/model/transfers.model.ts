@@ -4,8 +4,8 @@ import {Account} from "./account.model"
 import {Token} from "./token.model"
 
 @Entity_()
-export class Balance {
-  constructor(props?: Partial<Balance>) {
+export class Transfers {
+  constructor(props?: Partial<Transfers>) {
     Object.assign(this, props)
   }
 
@@ -14,21 +14,19 @@ export class Balance {
 
   @Index_()
   @ManyToOne_(() => Account, {nullable: false})
-  accountId!: Account
+  senderAccount!: Account
+
+  @Index_()
+  @ManyToOne_(() => Account, {nullable: false})
+  receiverAccount!: Account
 
   @Index_()
   @ManyToOne_(() => Token, {nullable: false})
   tokenId!: Token
 
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+  amount!: bigint
+
   @Column_("timestamp with time zone", {nullable: false})
   timestamp!: Date
-
-  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
-  freeBalance!: bigint | undefined | null
-
-  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
-  bondedBalance!: bigint | undefined | null
-
-  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
-  vestedBalance!: bigint | undefined | null
 }

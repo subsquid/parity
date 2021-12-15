@@ -3,9 +3,20 @@ description: Parity manifest
 
 typegen:
   outDir: src/types
+  blockHash: '0x703332e126b87658aa008507325627e837b0f7ed6d49d44a086d24b540bdd3ec'
   events:
+  # BalanceSet need to dealt also
     - registrar.Registered
+    - balances.NewAccount
     - balances.Transfer
+    - balances.Endowed
+    - balances.DustLost
+    - balances.Reserved
+    - balances.UnReserved
+    - balances.ReserveRepatriated
+    - balances.Deposit
+    - balances.Withdraw
+    - balances.Slashed
     - crowdloan.Created
     - auctions.AuctionStarted
     - auctions.AuctionClosed
@@ -22,37 +33,58 @@ typegen:
 mappings:
   mappingsModule: lib/mappings
   eventHandlers:
-    - event: registrar.Registered
-      handler: handleParachainRegistered
+    - event: balances.NewAccount
+      handler: newAccountHandler
+    - event: balances.Endowed
+      handler: newAccountHandler
     - event: balances.Transfer
-      handler: handleTransfer
-    - event: crowdloan.Created
-      handler: handleCrowdloanCreated
-    - event: auctions.AuctionStarted
-      handler: handleAuctionStarted
-    - event: auctions.AuctionClosed
-      handler: handleAuctionClosed
-    - event: auctions.WinningOffset
-      handler: handleAuctionWinningOffset
-    - event: auctions.BidAccepted
-      handler: handleBidAccepted
-    - event: auctions.Reserved
-      handler: handlerEmpty
-    - event: auctions.Unreserved
-      handler: handlerEmpty
-    - event: auctions.HandleBidResult
-      handler: handlerEmpty
-    - event: slots.Leased
-      handler: handleSlotsLeased
-    - event: slots.NewLeasePeriod
-      handler: handleNewLeasePeriod
-    - event: crowdloan.Contributed
-      handler: handleCrowdloanContributed
-    - event: crowdloan.Dissolved
-      handler: handleCrowdloanDissolved
+      handler: balanceTransfer
+    - event: balances.DustLost
+      handler: balanceDestroy
+    - event: balances.Reserved
+      handler: balancesReserved
+    - event: balances.UnReserved
+      handler: balancesUnReserved
+    - event: balances.Deposit
+      handler: balancesDeposit
+    - event: balances.Withdraw
+      handler: balancesWithdraw
+    - event: balances.Slashed
+      handler: balancesSlashed
+    # - event: registrar.Registered
+    #   handler: handleParachainRegistered
+    # - event: staking.Bonded
+    #   handler: handleBondedBalance
+    # - event: staking.Unbonded
+    #   handler: handleUnBondedBalance
+    # - event: crowdloan.Created
+    #   handler: handleCrowdloanCreated
+    # - event: auctions.AuctionStarted
+    #   handler: handleAuctionStarted
+    # - event: auctions.AuctionClosed
+    #   handler: handleAuctionClosed
+    # - event: auctions.WinningOffset
+    #   handler: handleAuctionWinningOffset
+    # - event: auctions.BidAccepted
+    #   handler: handleBidAccepted
+    # - event: auctions.Reserved
+    #   handler: handlerEmpty
+    # - event: auctions.Unreserved
+    #   handler: handlerEmpty
+    # - event: auctions.HandleBidResult
+    #   handler: handlerEmpty
+    # - event: slots.Leased
+    #   handler: handleSlotsLeased
+    # - event: slots.NewLeasePeriod
+    #   handler: handleNewLeasePeriod
+    # - event: crowdloan.Contributed
+    #   handler: handleCrowdloanContributed
+    # - event: crowdloan.Dissolved
+    #   handler: handleCrowdloanDissolved
 
 
   extrinsicHandlers:
   preBlockHooks:
+        - handler: initializeConstantsHandler
   postBlockHooks:
   # range: '[ 9034309, ]' # Auction startednewleas

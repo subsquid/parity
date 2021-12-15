@@ -1,25 +1,6 @@
 import { DatabaseManager, SubstrateBlock } from "@subsquid/hydra-common";
-import { Entity } from "@subsquid/openreader/dist/model";
-import { CROWDLOAN_STATUS } from "../../constants";
-import {
-  Auction,
-  AuctionParachain,
-  Bid,
-  Crowdloan,
-  CrowdloanSequence,
-  Parachain,
-  ParachainLeases,
-  Token,
-} from "../../generated/model";
-import { apiService } from "./api";
-import { TOKEN_DETAILS } from "./consistenecy";
-import { CrowdloanReturn, ParachainReturn } from "./types";
-import {
-  fetchCrowdloan,
-  getParachainId,
-  parseBigInt,
-  parseNumber,
-} from "./utils";
+import { encodeAddress } from "@polkadot/util-crypto";
+import { BlockEvent, BlockExtrinisic } from "./api";
 
 type EntityConstructor<T> = {
   new (...args: any[]): T;
@@ -56,12 +37,12 @@ export const get = async <T extends { id: string }>(
   store: DatabaseManager,
   entityConstructor: EntityConstructor<T>,
   id: string
-): Promise<T | undefined> => {
+): Promise<T | null> => {
   let e = await store.get(entityConstructor, {
     where: { id },
   });
 
-  return e;
+  return e || null;
 };
 
 export const getOrUpdate = async <T>(
@@ -74,9 +55,6 @@ export const getOrUpdate = async <T>(
   let e: any = await store.get(entityConstructor, {
     where: { id },
   });
-  // if(!e){
-  //   e = new entityConstructor({id})
-  // }
   const updatedItem = e
     ? updateFn
       ? updateFn(e)
@@ -93,244 +71,19 @@ export const getOrUpdate = async <T>(
   return e;
 };
 
-/**
- * @shalabh add description
- * @param address
- * @returns
- */
-export const isFundAddress = async (address: string) => {
-  let api = await apiService();
-  const hexStr = api.createType("Address", address).toHex();
-  return Buffer.from(hexStr.slice(4, 28), "hex")
-    .toString()
-    .startsWith("modlpy/cfund");
-};
-
-export const fetchParachain = async (
-  paraId: number,
-  block: SubstrateBlock
-): Promise<ParachainReturn | null> => {
-  /**
-   * Api changes as per the new AT syntax
-   */
-  const api = await apiService();
-  const apiAt = await api.at(block.hash);
-  const parachain = (
-    await apiAt.query.registrar.paras(paraId)
-  ).toJSON() as unknown;
-
-  return parachain as ParachainReturn | null;
-};
-
-export const ensureParachain = async (
-  paraId: number,
-  store: DatabaseManager,
-  block: SubstrateBlock
-): Promise<Parachain> => {
-  const { manager, deposit } = (await fetchParachain(paraId, block)) || {
-    manager: "",
-    deposit: "",
-  };
-  const parachainId = `${paraId}-${manager}`;
-  return await getOrUpdate<Parachain>(store, Parachain, parachainId, {
-    id: parachainId,
-    paraId,
-    manager,
-    deposit,
-    deregistered: false,
-  });
-};
-
-export const getIsReCreateCrowdloan = async (
-  fundId: string,
-  store: DatabaseManager
-): Promise<Boolean> => {
-  const [fund] = await await store.find(Crowdloan, {
-    where: { id: fundId },
-  });
-  const isReCreateCrowdloan = !!(
-    fund?.dissolvedBlock &&
-    fund?.status === CROWDLOAN_STATUS.DISSOLVED &&
-    fund?.isFinished
-  );
-
-  return isReCreateCrowdloan;
-};
-
-export const getLatestCrowdloanId = async (
-  parachainId: string,
-  store: DatabaseManager
-) => {
-  const api = await apiService();
-  const [seq] = await store.find(CrowdloanSequence, {
-    where: { id: parachainId },
-  });
-  const curBlockNum = await api.query.system.number();
-  if (seq) {
-    const crowdloanIdx = seq.curIndex;
-    const isReCreateCrowdloan = await getIsReCreateCrowdloan(
-      `${parachainId}-${crowdloanIdx}`,
-      store
-    );
-    let curIdex = crowdloanIdx;
-    if (isReCreateCrowdloan) {
-      curIdex = crowdloanIdx + 1;
-      seq.curIndex = curIdex;
-      seq.blockNum = curBlockNum.toNumber();
-      await store.save(seq);
-    }
-
-    return `${parachainId}-${curIdex}`;
+export function constructCache<T extends BlockExtrinisic| BlockEvent>(
+  list : Array<T> 
+  ):Map<string,  Array<T>>
+  {
+    let cache: Map<string,  Array<T>> = new Map()
+    list.map((element: T ) => {
+      let array = cache.get(`${element.blockNumber}`) || []
+      array?.push(element)
+      cache.set(`${element.blockNumber}`,array)
+    })
+    return cache
   }
 
-  const crowdloan = new CrowdloanSequence({
-    id: parachainId,
-    curIndex: 0,
-    createdAt: new Date(),
-    blockNum: curBlockNum.toNumber(),
-  });
-  await store.save(crowdloan);
-  return `${parachainId}-0`;
-};
-
-export const ensureFund = async (
-  paraId: number,
-  store: DatabaseManager,
-  block: SubstrateBlock,
-  modifier?: Record<string, any>
-): Promise<Crowdloan> => {
-  const fund = await fetchCrowdloan(paraId, block);
-  const parachainId = await getParachainId(paraId, block);
-  const parachain = await store.find(Parachain, {
-    where: { id: parachainId },
-    take: 1,
-  });
-
-  const fundId = await getLatestCrowdloanId(parachainId, store);
-  const {
-    cap,
-    end,
-    trieIndex,
-    raised,
-    lastContribution,
-    firstPeriod,
-    lastPeriod,
-    ...rest
-  } = fund || ({} as CrowdloanReturn);
-
-  const test: any = null;
-
-  // token data check and creation
-  let tokenData: Token | undefined = await store.get(Token, {
-    where: { id: TOKEN_DETAILS.id }, // This is temporary until we got way to get the chain id and token id
-  });
-
-  if (!tokenData) {
-    tokenData = new Token(TOKEN_DETAILS);
-    await store.save(tokenData);
-  }
-
-  return getOrUpdate<Crowdloan>(store, Crowdloan, fundId, test, (cur: any) => {
-    return !cur
-      ? new Crowdloan({
-          id: fundId,
-          parachain: parachain[0],
-          paraId: paraId.toString(),
-          tokenId: tokenData?.id || TOKEN_DETAILS.id,
-          ...rest,
-          firstSlot: firstPeriod,
-          lastSlot: lastPeriod,
-          status: CROWDLOAN_STATUS.STARTED,
-          raised: parseNumber(raised) as unknown as bigint,
-          cap: parseNumber(cap) as unknown as bigint,
-          lockExpiredBlock: end,
-          isFinished: false,
-          ...modifier,
-        })
-      : new Crowdloan({
-          ...cur,
-          raised:
-            raised === undefined
-              ? (parseBigInt(cur.raised) as unknown as bigint)
-              : (parseNumber(raised) as unknown as bigint),
-          cap:
-            cap === undefined
-              ? (parseBigInt(cur.cap) as unknown as bigint)
-              : (parseNumber(cap) as unknown as bigint),
-          ...modifier,
-        });
-  });
-};
-
-export const getAuctionsByOngoing = async (
-  store: DatabaseManager,
-  ongoing: boolean
-): Promise<Auction[] | undefined> => {
-  const records = await store.find(Auction, {
-    where: { ongoing: true },
-    take: 1,
-  });
-  return records.map((record) => create(record, Auction)) as Auction[];
-};
-
-export const getByLeaseRange = async (
-  store: DatabaseManager,
-  leaseRange: string
-): Promise<ParachainLeases[] | undefined> => {
-  const records = await store.find(ParachainLeases, {
-    where: { leaseRange },
-    take: 1,
-  });
-
-  return records.map((record: any) => create(record, ParachainLeases));
-};
-
-export const getByWinningAuction = async (
-  store: DatabaseManager,
-  winningAuction: number
-): Promise<Bid[] | undefined> => {
-  const records = await store.find(Bid, {
-    where: { winningAuction },
-    take: 1,
-  });
-
-  return records.map((record: any) => create(record, Bid));
-};
-
-export const getByAuctionParachain = async (
-  store: DatabaseManager,
-  id: string
-): Promise<AuctionParachain[] | undefined> => {
-  const records = await store.find(AuctionParachain, {
-    where: { id },
-    take: 1,
-  });
-
-  return records.map((record: any) => create(record, AuctionParachain));
-};
-
-export const getByAuctions = async (
-  store: DatabaseManager,
-  id: string
-): Promise<Auction[] | undefined> => {
-  const records = await store.find(Auction, {
-    where: { id },
-    take: 1,
-  });
-
-  if (records) {
-    return records.map((record: any) => create(record, Auction));
-  } else {
-    return;
-  }
-};
-
-export const create = <T>(
-  record: any,
-  entityConstructor: EntityConstructor<T>
-) => {
-  let entity = new entityConstructor(record.id);
-  Object.assign(entity, record);
-
-  return entity;
-};
+  export function convertAddressToSubstrate(address: string) : string {
+    return encodeAddress(address, 42);
+}

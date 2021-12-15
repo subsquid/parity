@@ -3,6 +3,6 @@ import {Codec, DetectCodec} from '@polkadot/types/types'
 
 export const registry = new TypeRegistry()
 
-export const create = <T extends Codec = Codec, K extends string = string>(type: K, params: unknown): DetectCodec<T, K> => {
+export function create<T extends Codec = Codec, K extends string = string>(type: K, params: unknown): DetectCodec<T, K> {
   return createTypeUnsafe(registry, type, [params])
 }
