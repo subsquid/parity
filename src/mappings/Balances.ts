@@ -134,7 +134,7 @@ export const balanceTransfer = async ({
   event,
   block,
 }: EventContext & StoreContext): Promise<void> => {
-  const [from,to, balance] = new Balances.TransferEvent(event).params;
+  const [from,to, amount] = new Balances.TransferEvent(event).params;
 
   let [accountFrom, accountTo] = await Promise.all([
     get(store, Account,from.toString()),
@@ -168,12 +168,22 @@ if(
   console.error(`balances not found, `,from.toString(), to.toString())
   process.exit(0)
 }
-  balanceFrom.freeBalance = (balanceFrom?.freeBalance || 0n) - balance.toBigInt()
-  balanceTo.freeBalance = (balanceTo?.freeBalance || 0n) + balance.toBigInt()
+  balanceFrom.freeBalance = (balanceFrom?.freeBalance || 0n) - amount.toBigInt()
+  balanceTo.freeBalance = (balanceTo?.freeBalance || 0n) + amount.toBigInt()
 
   await Promise.all([
     store.save(balanceFrom),
     store.save(balanceTo)
   ])
+
+  const transfer = new Transfers({
+    senderAccount: accountFrom,
+    receiverAccount: accountTo,
+    tokenId: nativeToken, // will have to change once fix is up
+    amount: amount.toBigInt(),
+    timestamp:timestampToDate(block)
+})
+
+await store.save(transfer)
 
 };

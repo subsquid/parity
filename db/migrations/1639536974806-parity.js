@@ -1,7 +1,7 @@
 const { MigrationInterface, QueryRunner } = require("typeorm");
 
-module.exports = class parity1639536413055 {
-    name = 'parity1639536413055'
+module.exports = class parity1639536974806 {
+    name = 'parity1639536974806'
 
     async up(queryRunner) {
         await queryRunner.query(`CREATE TABLE "token" ("id" character varying NOT NULL, "token_symbol" text NOT NULL, "token_name" text NOT NULL, CONSTRAINT "PK_82fae97f905930df5d62a702fc9" PRIMARY KEY ("id"))`);
