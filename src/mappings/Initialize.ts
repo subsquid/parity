@@ -143,7 +143,7 @@ export const initializeConstantsHandler = async ({
                convertAddressToSubstrate(`${account.data[0]}`),
                 BigInt(account.data[1]),
                 0n,
-                new Date(timestamp.timestamps[blockElement.blockNumber].timestamp/ 1000),
+                new Date(timestamp.timestamps[blockElement.blockNumber].timestamp),
                 store
               ));
             });
