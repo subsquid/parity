@@ -5,6 +5,7 @@ typegen:
   outDir: src/types
   blockHash: '0x703332e126b87658aa008507325627e837b0f7ed6d49d44a086d24b540bdd3ec'
   events:
+  # BalanceSet need to dealt also
     - registrar.Registered
     - balances.NewAccount
     - balances.Transfer
@@ -32,14 +33,26 @@ typegen:
 mappings:
   mappingsModule: lib/mappings
   eventHandlers:
-    # - event: registrar.Registered
-    #   handler: handleParachainRegistered
     - event: balances.NewAccount
       handler: newAccountHandler
     - event: balances.Endowed
       handler: newAccountHandler
     - event: balances.Transfer
       handler: balanceTransfer
+    - event: balances.DustLost
+      handler: balanceDestroy
+    - event: balances.Reserved
+      handler: balancesReserved
+    - event: balances.UnReserved
+      handler: balancesUnReserved
+    - event: balances.Deposit
+      handler: balancesDeposit
+    - event: balances.Withdraw
+      handler: balancesWithdraw
+    - event: balances.Slashed
+      handler: balancesSlashed
+    # - event: registrar.Registered
+    #   handler: handleParachainRegistered
     # - event: staking.Bonded
     #   handler: handleBondedBalance
     # - event: staking.Unbonded
