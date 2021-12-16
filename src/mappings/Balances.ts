@@ -129,8 +129,10 @@ export async function getBalance(
   );
 
   if (balance === undefined || balance === null) {
-    console.error(`Balance not found in ${method}`, from.toString());
+    let error = `Balance not found in ${method} ${from.toString()} when getting balance`;
+    console.error(error);
     if (createIfNotFound) {
+      logErrorToFile(error);
       const balance = await getBalanceFromRPC(block, from);
       const [, newBalance] = await createNewAccount(
         from,
@@ -314,6 +316,9 @@ export const balanceTransfer = async ({
     : (balanceTo?.freeBalance || 0n) + amount.toBigInt();
 
   await Promise.all([store.save(balanceFrom), store.save(balanceTo)]);
+  if (nativeToken == undefined) {
+    await setTokenDetails(store);
+  }
 
   const transfer = new Transfers({
     senderAccount: accountFrom,
@@ -336,7 +341,8 @@ export const balanceDestroy = async ({
     from.toString(),
     "Balances DustLost",
     store,
-    block
+    block,
+    true
   );
 
   balance.bondedBalance = 0n;

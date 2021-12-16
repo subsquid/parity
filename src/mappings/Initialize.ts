@@ -78,10 +78,10 @@ export interface Timestamp {
 
 export interface TimestampElement {
   blockNumber: number;
-  timestamp:   number;
+  timestamp: number;
 }
 
-export const initializeConstantsHandler = async ({
+export const loadGenesisData = async ({
   store,
   event,
   block,
@@ -111,46 +111,49 @@ export const initializeConstantsHandler = async ({
   console.log("Initializing Indexer with defaults completed");
   console.log("Starting to take up initial bootstrap");
 
-  let allNewAccountPromises: Array<Promise<any>> = []
+  let allNewAccountPromises: Array<Promise<any>> = [];
   let timestamp: Timestamp = JSON.parse(
     fs.readFileSync(
       path.resolve(__dirname + `/../../blocksStash/timestamp.json`),
       "utf8"
     )
   );
-  STASH_FILES.map( (file) => {
-      let events: Blocks = JSON.parse(
-        fs.readFileSync(
-          path.resolve(__dirname + `/../../blocksStash/${file}`),
-          "utf8"
-        )
-      );
-      return events.blockEvents.map(
-        // Iterating through each block
-         (blockElement) => {
-          console.log("Processing  block:", blockElement.blockNumber);
-          // Iterating extrinsics
-          return blockElement.events.map( (extrinsicItem) => {
-            let newAccounts = extrinsicItem.events.filter(
-              // Iterating through each events
-              (element) =>
-                element.method === "NewAccount" &&
-                element.section === "balances"
-            );
-            return newAccounts.map( (account) => {
-              console.log("Creating new Account", account.data[0]);
-              allNewAccountPromises.push(createNewAccount(
-               convertAddressToSubstrate(`${account.data[0]}`),
+  STASH_FILES.map((file) => {
+    let events: Blocks = JSON.parse(
+      fs.readFileSync(
+        path.resolve(__dirname + `/../../blocksStash/${file}`),
+        "utf8"
+      )
+    );
+    return events.blockEvents.map(
+      // Iterating through each block
+      (blockElement) => {
+        console.log("Processing  block:", blockElement.blockNumber);
+        // Iterating extrinsics
+        return blockElement.events.map((extrinsicItem) => {
+          let newAccounts = extrinsicItem.events.filter(
+            // Iterating through each events
+            (element) =>
+              element.method === "NewAccount" && element.section === "balances"
+          );
+          return newAccounts.map((account) => {
+            console.log("Creating new Account", account.data[0]);
+            allNewAccountPromises.push(
+              createNewAccount(
+                convertAddressToSubstrate(`${account.data[0]}`),
                 BigInt(account.data[1]),
                 0n,
-                new Date(timestamp.timestamps[blockElement.blockNumber].timestamp),
+                new Date(
+                  timestamp.timestamps[blockElement.blockNumber].timestamp
+                ),
                 store
-              ));
-            });
+              )
+            );
           });
-        }
-      );
-    })
-    // 0000009371-feb9d
-    await Promise.all(allNewAccountPromises)
+        });
+      }
+    );
+  });
+  // 0000009371-feb9d
+  await Promise.all(allNewAccountPromises);
 };
