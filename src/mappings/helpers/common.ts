@@ -123,9 +123,9 @@ export const fetchParachain = async (
   paraId: number,
   block: SubstrateBlock
 ): Promise<ParachainReturn | null> => {
-  const api = await apiService();
+  const api = await apiService(block.hash);
   const parachain = (
-    await api.query.registrar.paras.at(block.hash, paraId)
+    await api.query.registrar.paras(paraId)
   ).toJSON() as unknown;
 
   return parachain as ParachainReturn | null;

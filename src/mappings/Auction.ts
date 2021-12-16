@@ -35,8 +35,6 @@ export async function handleAuctionStarted({
   event,
   block,
 }: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Auctions] [AuctionStarted] Event Started.`);
-
   const [auctionId, slotStart, auctionEnds] = new Auctions.AuctionStartedEvent(
     event
   ).params;
@@ -67,8 +65,6 @@ export async function handleAuctionStarted({
   }
   chronicle.curAuctionId = auctionId.toString();
   await store.save(chronicle);
-
-  console.info(` ------ [Auctions] [AuctionStarted] Event Completed.`);
 }
 
 export async function handleAuctionClosed({
@@ -76,8 +72,6 @@ export async function handleAuctionClosed({
   event,
   block,
 }: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Auctions] [AuctionClosed] Event Started.`);
-
   const [auctionId] = new Auctions.AuctionClosedEvent(event).params;
   const auction = await get(store, Auction, auctionId.toString());
   if (!auction) {
@@ -98,8 +92,6 @@ export async function handleAuctionClosed({
   }
   chronicle.curAuctionId = null;
   await store.save(chronicle);
-
-  console.info(` ------ [Auctions] [AuctionClosed] Event Completed.`);
 }
 
 export async function handleAuctionWinningOffset({
@@ -107,8 +99,6 @@ export async function handleAuctionWinningOffset({
   event,
   block,
 }: EventContext & StoreContext): Promise<void> {
-  console.info(` ------ [Auctions] [WinningOffset] Event Started.`);
-
   const [auctionId, offsetBlock] = new Auctions.WinningOffsetEvent(event)
     .params;
   const auction = await store.find(Auction, {
@@ -127,8 +117,6 @@ export async function handleAuctionWinningOffset({
     );
     await store.save(auctionData);
   }
-
-  console.info(` ------ [Auctions] [WinningOffset] Event Completed.`);
 }
 
 const markLosingBids = async (
@@ -149,7 +137,6 @@ const markLosingBids = async (
   for (const bid of losingBids) {
     bid.winningAuction = null;
     await store.save(bid);
-    console.info(`Mark Bid as losing bid ${bid.id}`);
   }
 };
 
@@ -202,7 +189,7 @@ export const handleBidAccepted = async ({
   event,
   block,
 }: EventContext & StoreContext): Promise<void> => {
-  const api = await apiService();
+  const api = await apiService(block.hash);
   const blockNum = block.height;
   const [from, paraId, amount, firstSlot, lastSlot] =
     new Auctions.BidAcceptedEvent(event).params;
