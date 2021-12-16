@@ -1,7 +1,11 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
 import * as marshal from "../marshal"
 import {Token} from "./token.model"
 import {Account} from "./account.model"
+import {ParachainLeases} from "./parachainLeases.model"
+import {Bid} from "./bid.model"
+import {Crowdloan} from "./crowdloan.model"
+import {Chronicle} from "./chronicle.model"
 
 @Entity_()
 export class Chains {
@@ -43,4 +47,25 @@ export class Chains {
   @Index_()
   @ManyToOne_(() => Account, {nullable: true})
   manager!: Account | undefined | null
+
+  @OneToMany_(() => ParachainLeases, e => e.parachain)
+  leases!: ParachainLeases[]
+
+  @OneToMany_(() => Bid, e => e.parachain)
+  bids!: Bid[]
+
+  @OneToMany_(() => Crowdloan, e => e.parachain)
+  funds!: Crowdloan[]
+
+  @Index_()
+  @ManyToOne_(() => Crowdloan, {nullable: true})
+  activeFund!: Crowdloan | undefined | null
+
+  @Index_()
+  @ManyToOne_(() => Bid, {nullable: true})
+  latestBid!: Bid | undefined | null
+
+  @Index_()
+  @ManyToOne_(() => Chronicle, {nullable: true})
+  chronicle!: Chronicle | undefined | null
 }
