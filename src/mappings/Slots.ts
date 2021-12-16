@@ -133,7 +133,8 @@ export async function handleNewLeasePeriod({
   block,
 }: EventContext & StoreContext): Promise<void> {
   const [leaseIdx] = new Slots.NewLeasePeriodEvent(event).params;
-  const api = await apiService(block.hash);
+  // TODO: Check this api out to use block hash
+  const api = await apiService();
   const leasePeriod = api.consts.slots.leasePeriod.toJSON() as number;
   const timestamp: number = Math.round(block.timestamp / 1000);
   let newValue = {
