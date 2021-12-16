@@ -19,7 +19,7 @@ type Auction @entity {
 type Crowdloan @entity {
   id: ID! # generated fund address
   parachain: Chains!
-  paraId: ID!
+  paraId: Int!
   tokenId: Token!
   depositor: Account!
   verifier: Account
@@ -34,6 +34,7 @@ type Crowdloan @entity {
   dissolved: Boolean
   won: Boolean
   dissolvedDate: DateTime
+  dissolvedBlock: Int
   leaseStart: BigInt
   leaseEnd: BigInt
   updatedAt: DateTime
@@ -55,7 +56,7 @@ type AuctionParachain @entity {
 
 type ParachainLeases @entity {
   id: ID! # paraId-leaseRange-auction
-  paraId: ID!
+  paraId: Int!
   parachain: Chains!
   leaseRange: String! #auctionId-start-end
   firstLease: Int!
@@ -137,7 +138,7 @@ type Chains @entity {
   nativeToken: Token
   chainName: String
   relayId: ID!
-  paraId: ID
+  paraId: Int
   relayChain: Boolean
   createdAt: DateTime
   creationBlock: Int

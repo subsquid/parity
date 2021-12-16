@@ -18,8 +18,8 @@ export class Crowdloan {
   @ManyToOne_(() => Chains, {nullable: false})
   parachain!: Chains
 
-  @Column_("text", {nullable: false})
-  paraId!: string
+  @Column_("integer", {nullable: false})
+  paraId!: number
 
   @Index_()
   @ManyToOne_(() => Token, {nullable: false})
@@ -65,6 +65,9 @@ export class Crowdloan {
 
   @Column_("timestamp with time zone", {nullable: true})
   dissolvedDate!: Date | undefined | null
+
+  @Column_("integer", {nullable: true})
+  dissolvedBlock!: number | undefined | null
 
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
   leaseStart!: bigint | undefined | null

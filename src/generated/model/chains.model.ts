@@ -26,8 +26,8 @@ export class Chains {
   @Column_("text", {nullable: false})
   relayId!: string
 
-  @Column_("text", {nullable: true})
-  paraId!: string | undefined | null
+  @Column_("integer", {nullable: true})
+  paraId!: number | undefined | null
 
   @Column_("bool", {nullable: true})
   relayChain!: boolean | undefined | null

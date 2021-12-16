@@ -13,7 +13,7 @@ export const handleParachainRegistered = async ({
 }: EventContext & StoreContext): Promise<void> => {
   const [paraId, managerId] = new Registrar.RegisteredEvent(event).params;
   const parachain = new Chains({
-    paraId: paraId.toString(),
+    paraId: paraId.toNumber(),
     relayChain: false,
     relayId: RELAY_CHAIN_DETAILS.id,
   });
@@ -50,9 +50,9 @@ export const handleDeRegistered = async ({
   block,
 }: EventContext & StoreContext): Promise<void> => {
   const [paraId] = new Registrar.DeregisteredEvent(event).params;
-  const chain = await get(store, Chains, "", { paraId: paraId.toString() });
+  const chain = await get(store, Chains, "", { paraId: paraId.toNumber() });
   if (chain === undefined || chain === null) {
-    console.log("Chain not found with paraId ", paraId.toString());
+    console.log("Chain not found with paraId ", paraId.toNumber());
     return;
   }
   chain.deregistered = true;

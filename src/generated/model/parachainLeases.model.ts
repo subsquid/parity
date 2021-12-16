@@ -12,8 +12,8 @@ export class ParachainLeases {
   @PrimaryColumn_()
   id!: string
 
-  @Column_("text", {nullable: false})
-  paraId!: string
+  @Column_("integer", {nullable: false})
+  paraId!: number
 
   @Index_()
   @ManyToOne_(() => Chains, {nullable: false})
