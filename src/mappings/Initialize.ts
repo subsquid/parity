@@ -86,9 +86,6 @@ export const loadGenesisData = async ({
   event,
   block,
 }: EventContext & StoreContext): Promise<void> => {
-  if (block.height > 9051) {
-    return;
-  }
   console.log("Initializing Indexer with defaults");
 
   const nativeToken = new Token({
