@@ -7,7 +7,6 @@ import {
   SubstrateEvent,
   SubstrateExtrinsic,
 } from "@subsquid/hydra-common";
-import { stripSpaces } from "@subsquid/hydra-processor/lib/util";
 import { NATIVE_TOKEN_DETAILS, RELAY_CHAIN_DETAILS } from "../constants";
 import { Account, Balance, Chains, Token, Transfers } from "../generated/model";
 import { Balances } from "../types/Balances";
@@ -24,7 +23,13 @@ import { logErrorToFile } from "./helpers/log";
 let relayChain: any;
 let nativeToken: any;
 
+interface balanceRPCResponse {
+  free: bigint;
+  reserve: bigint;
+}
+
 // Helpers for balances
+// TODO add handler for reserve repatriated
 
 /**
  * Caches Relay Chain details
@@ -39,6 +44,37 @@ export async function setRelayChain(
     process.exit(0);
   }
   relayChain = chain;
+}
+
+/**
+ * Fetch balance from RPC
+ * @param { SubstrateBlock} block
+ * @param {string} accountId
+ * @returns {Promise<balanceRPCResponse>}
+ */
+export async function getBalanceFromRPC(
+  block: SubstrateBlock,
+  accountId: string
+): Promise<balanceRPCResponse> {
+  let api = await apiService(block.hash);
+  if (api.query.balances.freeBalance && api.query.balances.reservedBalance) {
+    const [free, reserve] = await api.queryMulti([
+      [api.query.balances.freeBalance, accountId],
+      [api.query.balances.reservedBalance, accountId],
+    ]);
+    return { free: free.toBigInt(), reserve: reserve.toBigInt() };
+  }
+
+  if (api.query.system.account) {
+    const { data: balance } = await api.query.system.account(accountId);
+    return {
+      free: balance.free.toBigInt(),
+      reserve: balance.reserved.toBigInt(),
+    };
+  }
+
+  console.log("Error Fetching the balance ", accountId);
+  process.exit(0);
 }
 
 /**
@@ -71,32 +107,49 @@ export function getBalanceId(
 
 /**
  * Retrieve balances
- * @param {string} from 
- * @param {DatabaseManager} store 
- * @param {string} method 
- * @param {string} tokenId 
+ * @param {string} from
+ * @param {string} method
+ * @param {DatabaseManager} store
+ * @param {SubstrateBlock} block
+ * @param {string} tokenId
  * @returns {Balance}
  */
 export async function getBalance(
   from: string,
-  store: DatabaseManager,
   method: string,
+  store: DatabaseManager,
+  block: SubstrateBlock,
+  createIfNotFound: boolean = false,
   tokenId: string = RELAY_CHAIN_DETAILS.id
-){
-  const balance = await get(store, Balance, getBalanceId(from.toString(),tokenId));
+): Promise<Balance> {
+  const balance = await get(
+    store,
+    Balance,
+    getBalanceId(from.toString(), tokenId)
+  );
 
   if (balance === undefined || balance === null) {
     console.error(`Balance not found in ${method}`, from.toString());
+    if (createIfNotFound) {
+      const [, newBalance] = await createNewAccount(
+        from,
+        0n,
+        0n,
+        timestampToDate(block),
+        store
+      );
+      return newBalance;
+    }
     process.exit(0);
   }
-  return balance
+  return balance;
 }
 
 /**
  * Creates a new account
  * @param {string} accountId
  * @param {DatabaseManager} store
- * @returns {Account}
+ * @returns {[Account, Balance]}
  */
 export const createNewAccount = async (
   accountId: string,
@@ -104,7 +157,7 @@ export const createNewAccount = async (
   reserveBalance: bigint,
   timestamp: Date,
   store: DatabaseManager
-) => {
+): Promise<[Account, Balance]> => {
   if (relayChain == undefined) {
     await setRelayChain(store);
   }
@@ -128,8 +181,18 @@ export const createNewAccount = async (
     vestedBalance: 0n,
   });
   await store.save(balance);
-  return newAccount;
+  return [newAccount, balance];
 };
+
+interface newAccountCache {
+  [blockNumber: number]: {
+    [address: string]: {
+      extrinsicId: string | undefined;
+      amount: bigint;
+    };
+  };
+}
+const cacheNewAccountEvents: newAccountCache = {};
 
 export const newAccountHandler = async ({
   store,
@@ -138,24 +201,21 @@ export const newAccountHandler = async ({
   extrinsic,
 }: EventContext & StoreContext): Promise<void> => {
   const [to, balance] = new Balances.NewAccountEvent(event).params;
-  let isTransfer: any;
-  if (extrinsic?.id) {
-    const allExtrinsic = await allBlockExtrinsics(block.height);
-    const currentExtrinsic = allExtrinsic.find(
-      (extrinsicItem) => extrinsicItem.id === extrinsic?.id
-    );
-    isTransfer =
-      currentExtrinsic &&
-      currentExtrinsic.substrate_events.find(
-        (eventItem) => eventItem.name === "balances.transfer"
-      );
-  }
-  if (isTransfer) {
-    // A new account can be created by a transfer also. This will be handled in balance
-    // transfers. Skipping
-    console.log("Transfer Detected for new account.Skipping");
-    return;
-  }
+  const blockNumber = block.height;
+
+  // Clear cache for a new block
+  cacheNewAccountEvents[blockNumber] = cacheNewAccountEvents[blockNumber]
+    ? cacheNewAccountEvents[blockNumber]
+    : {};
+
+  // Since a transfer can also cause a new account event
+  // we are caching such events to avoid adding new balance again
+  cacheNewAccountEvents[blockNumber][to.toString()] =
+    cacheNewAccountEvents[blockNumber][to.toString()] || {};
+  cacheNewAccountEvents[blockNumber][to.toString()] = {
+    extrinsicId: extrinsic?.id,
+    amount: balance.toBigInt(),
+  };
 
   await createNewAccount(
     to.toString(),
@@ -165,11 +225,38 @@ export const newAccountHandler = async ({
     store
   );
 };
+export const newBalanceSetHandler = async ({
+  store,
+  event,
+  block,
+  extrinsic,
+}: EventContext & StoreContext): Promise<void> => {
+  const [to, balance] = new Balances.BalanceSetEvent(event).params;
+  const blockNumber = block.height;
+
+  const newAccountEvent = cacheNewAccountEvents[blockNumber][to.toString()];
+
+  if (newAccountEvent?.extrinsicId === extrinsic?.id) {
+    // already processed in new account, skipping
+    return;
+  }
+
+  const balanceTo = await getBalance(
+    to.toString(),
+    "Balance Set Event",
+    store,
+    block
+  );
+
+  balanceTo.freeBalance = (balanceTo.freeBalance || 0n) + balance.toBigInt();
+  await store.save(balanceTo);
+};
 
 export const balanceTransfer = async ({
   store,
   event,
   block,
+  extrinsic,
 }: EventContext & StoreContext): Promise<void> => {
   const [from, to, amount] = new Balances.TransferEvent(event).params;
 
@@ -180,26 +267,21 @@ export const balanceTransfer = async ({
 
   if (accountFrom == undefined) {
     console.error("Account not found ", from.toString());
-    let api = await apiService();
-    const hash = await api.rpc.chain.getBlockHash(9577);
-    api = await api.at(hash);
-    const [free, reserve] = await Promise.all([
-      api.query.balances.freeBalance(from.toString()),
-      api.query.balances.reservedBalance(from.toString()),
-    ]);
-    accountFrom = await createNewAccount(
+    const { free, reserve } = await getBalanceFromRPC(block, from.toString());
+    const newAccount = await createNewAccount(
       from.toString(),
-      BigInt(free),
-      BigInt(reserve),
+      free,
+      reserve,
       timestampToDate(block),
       store
     );
+    accountFrom = newAccount[0];
     await logErrorToFile(
       `From Account ${from.toString()} not found at block ${block.height}`
     );
   }
   if (accountTo == undefined) {
-    accountTo = await createNewAccount(
+    [accountTo] = await createNewAccount(
       to.toString(),
       0n,
       0n,
@@ -219,7 +301,16 @@ export const balanceTransfer = async ({
   }
   balanceFrom.freeBalance =
     (balanceFrom?.freeBalance || 0n) - amount.toBigInt();
-  balanceTo.freeBalance = (balanceTo?.freeBalance || 0n) + amount.toBigInt();
+
+  let newAccountEvent = cacheNewAccountEvents[block.height][to.toString()];
+
+  // Skip balance to if already done in new account creation
+  let skipToBalanceProcess =
+    newAccountEvent?.extrinsicId === extrinsic?.id &&
+    newAccountEvent?.amount === amount.toBigInt();
+  balanceTo.freeBalance = skipToBalanceProcess
+    ? balanceTo.freeBalance
+    : (balanceTo?.freeBalance || 0n) + amount.toBigInt();
 
   await Promise.all([store.save(balanceFrom), store.save(balanceTo)]);
 
@@ -237,13 +328,15 @@ export const balanceTransfer = async ({
 export const balanceDestroy = async ({
   store,
   event,
+  block,
 }: EventContext & StoreContext): Promise<void> => {
   const [from] = new Balances.DustLostEvent(event).params;
   const balance = await getBalance(
     from.toString(),
+    "Balances DustLost",
     store,
-    'Balances DustLost',
-    )
+    block
+  );
 
   balance.bondedBalance = 0n;
   balance.vestedBalance = 0n;
@@ -252,91 +345,95 @@ export const balanceDestroy = async ({
   await store.save(balance);
 };
 
-
 export const balancesReserved = async ({
   store,
   event,
+  block,
 }: EventContext & StoreContext): Promise<void> => {
   const [from, amount] = new Balances.ReservedEvent(event).params;
   const balance = await getBalance(
     from.toString(),
+    "Balances Reserved",
     store,
-    'Balances Reserved',
-    )
+    block
+  );
 
-  balance.bondedBalance =(balance.bondedBalance || 0n) + amount.toBigInt();
-  balance.freeBalance =  (balance.freeBalance || 0n) - amount.toBigInt();
+  balance.bondedBalance = (balance.bondedBalance || 0n) + amount.toBigInt();
+  balance.freeBalance = (balance.freeBalance || 0n) - amount.toBigInt();
 
   await store.save(balance);
 };
-
 
 export const balancesUnReserved = async ({
   store,
   event,
+  block,
 }: EventContext & StoreContext): Promise<void> => {
   const [from, amount] = new Balances.ReservedEvent(event).params;
   const balance = await getBalance(
     from.toString(),
+    "Balances UnReserved",
     store,
-    'Balances UnReserved',
-    )
+    block
+  );
 
-  balance.bondedBalance =(balance.bondedBalance || 0n) - amount.toBigInt();
-  balance.freeBalance =  (balance.freeBalance || 0n) + amount.toBigInt();
+  balance.bondedBalance = (balance.bondedBalance || 0n) - amount.toBigInt();
+  balance.freeBalance = (balance.freeBalance || 0n) + amount.toBigInt();
 
   await store.save(balance);
 };
-
 
 export const balancesDeposit = async ({
   store,
   event,
+  block,
 }: EventContext & StoreContext): Promise<void> => {
   const [from, amount] = new Balances.DepositEvent(event).params;
   const balance = await getBalance(
     from.toString(),
+    "Balances Deposit",
     store,
-    'Balances Deposit',
-    )
+    block,
+    true
+  );
 
-  balance.freeBalance =  (balance.freeBalance || 0n) + amount.toBigInt();
+  balance.freeBalance = (balance.freeBalance || 0n) + amount.toBigInt();
 
   await store.save(balance);
 };
-
 
 export const balancesWithdraw = async ({
   store,
   event,
+  block,
 }: EventContext & StoreContext): Promise<void> => {
   const [from, amount] = new Balances.WithdrawEvent(event).params;
   const balance = await getBalance(
     from.toString(),
+    "Balances withdraw",
     store,
-    'Balances withdraw',
-    )
+    block
+  );
 
-  balance.freeBalance =  (balance.freeBalance || 0n) - amount.toBigInt();
+  balance.freeBalance = (balance.freeBalance || 0n) - amount.toBigInt();
 
   await store.save(balance);
 };
-
 
 export const balancesSlashed = async ({
   store,
   event,
+  block,
 }: EventContext & StoreContext): Promise<void> => {
   const [from, amount] = new Balances.SlashedEvent(event).params;
   const balance = await getBalance(
     from.toString(),
+    "Balances Slashed",
     store,
-    'Balances Slashed',
-    )
+    block
+  );
 
-  balance.freeBalance =  (balance.freeBalance || 0n) - amount.toBigInt();
+  balance.freeBalance = (balance.freeBalance || 0n) - amount.toBigInt();
 
   await store.save(balance);
 };
-
-
