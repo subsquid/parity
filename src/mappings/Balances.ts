@@ -9,6 +9,7 @@ import {
 } from "@subsquid/hydra-common";
 import { NATIVE_TOKEN_DETAILS, RELAY_CHAIN_DETAILS } from "../constants";
 import { Account, Balance, Chains, Token, Transfers } from "../generated/model";
+import { Staking } from "../types";
 import { Balances } from "../types/Balances";
 import { allBlockExtrinsics, apiService } from "./helpers/api";
 import { get, getOrCreate, timestampToDate } from "./helpers/common";
@@ -444,3 +445,38 @@ export const balancesSlashed = async ({
 
   await store.save(balance);
 };
+
+export async function handleBonded({
+  store,
+  event,
+  block,
+}: EventContext & StoreContext): Promise<void> {
+  const [stash, amount] = new Staking.BondedEvent(event).params;
+
+  let address = stash.toString();
+  let amountBalance = amount.toBigInt();
+  let balance = await getBalance(address, "Staking Bonded", store, block, true);
+  balance.bondedBalance = balance.bondedBalance || 0n + amountBalance;
+  await store.save(balance);
+}
+
+export async function handleUnBonded({
+  store,
+  event,
+  block,
+  extrinsic,
+}: EventContext & StoreContext): Promise<void> {
+  const [stash, amount] = new Staking.UnbondedEvent(event).params;
+
+  let address = stash.toString();
+  let amountBalance = amount.toBigInt();
+  let balance = await getBalance(
+    address,
+    "Staking UnBonded",
+    store,
+    block,
+    true
+  );
+  balance.bondedBalance = balance.bondedBalance || 0n - amountBalance;
+  await store.save(balance);
+}

@@ -30,6 +30,8 @@ typegen:
     - slots.NewLeasePeriod
     - crowdloan.Contributed
     - crowdloan.Dissolved
+    - staking.Bonded
+    - staking.Unbonded
 
 mappings:
   mappingsModule: lib/mappings
@@ -58,10 +60,10 @@ mappings:
       handler: handleParachainRegistered
     - event: registrar.Deregistered
       handler: handleDeRegistered
-    # - event: staking.Bonded
-    #   handler: handleBondedBalance
-    # - event: staking.Unbonded
-    #   handler: handleUnBondedBalance
+    - event: staking.Bonded
+      handler: handleBonded
+    - event: staking.Unbonded
+      handler: handleUnBonded
     - event: crowdloan.Created
       handler: handleCrowdloanCreated
     - event: auctions.AuctionStarted

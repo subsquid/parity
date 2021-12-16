@@ -129,7 +129,7 @@ type Balance @entity {
   tokenId: Token!
   timestamp: DateTime!
   freeBalance: BigInt
-  bondedBalance: BigInt
+  bondedBalance: BigInt # balance reserved + staking bond
   vestedBalance: BigInt
 }
 
