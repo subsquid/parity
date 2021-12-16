@@ -192,6 +192,7 @@ interface newAccountCache {
   };
 }
 const cacheNewAccountEvents: newAccountCache = {};
+
 export const newAccountHandler = async ({
   store,
   event,
@@ -222,6 +223,32 @@ export const newAccountHandler = async ({
     timestampToDate(block),
     store
   );
+};
+export const newBalanceSetHandler = async ({
+  store,
+  event,
+  block,
+  extrinsic,
+}: EventContext & StoreContext): Promise<void> => {
+  const [to, balance] = new Balances.BalanceSetEvent(event).params;
+  const blockNumber = block.height;
+
+  const newAccountEvent = cacheNewAccountEvents[blockNumber][to.toString()];
+
+  if (newAccountEvent?.extrinsicId === extrinsic?.id) {
+    // already processed in new account, skipping
+    return;
+  }
+
+  const balanceTo = await getBalance(
+    to.toString(),
+    "Balance Set Event",
+    store,
+    block
+  );
+
+  balanceTo.freeBalance = (balanceTo.freeBalance || 0n) + balance.toBigInt();
+  await store.save(balanceTo);
 };
 
 export const balanceTransfer = async ({

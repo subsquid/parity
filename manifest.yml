@@ -17,6 +17,7 @@ typegen:
     - balances.Deposit
     - balances.Withdraw
     - balances.Slashed
+    - balances.BalanceSet
     - crowdloan.Created
     - auctions.AuctionStarted
     - auctions.AuctionClosed
@@ -35,6 +36,8 @@ mappings:
   eventHandlers:
     - event: balances.NewAccount
       handler: newAccountHandler
+    - event: balances.BalanceSet
+      handler: newBalanceSetHandler
     - event: balances.Endowed
       handler: newAccountHandler
     - event: balances.Transfer
@@ -87,4 +90,4 @@ mappings:
   preBlockHooks:
         - handler: initializeConstantsHandler
   postBlockHooks:
-  # range: '[ 9034309, ]' # Auction startednewleas
+  # range: '[ 9034309, ]' # Auction startednewleas 
