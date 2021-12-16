@@ -36,10 +36,11 @@ export const getOrCreate = async <T extends { id: string }>(
 export const get = async <T extends { id: string }>(
   store: DatabaseManager,
   entityConstructor: EntityConstructor<T>,
-  id: string
+  id: string,
+  query?: any
 ): Promise<T | null> => {
   let e = await store.get(entityConstructor, {
-    where: { id },
+    where: !query ? { id } : query,
   });
 
   return e || null;
@@ -71,19 +72,18 @@ export const getOrUpdate = async <T>(
   return e;
 };
 
-export function constructCache<T extends BlockExtrinisic| BlockEvent>(
-  list : Array<T> 
-  ):Map<string,  Array<T>>
-  {
-    let cache: Map<string,  Array<T>> = new Map()
-    list.map((element: T ) => {
-      let array = cache.get(`${element.blockNumber}`) || []
-      array?.push(element)
-      cache.set(`${element.blockNumber}`,array)
-    })
-    return cache
-  }
+export function constructCache<T extends BlockExtrinisic | BlockEvent>(
+  list: Array<T>
+): Map<string, Array<T>> {
+  let cache: Map<string, Array<T>> = new Map();
+  list.map((element: T) => {
+    let array = cache.get(`${element.blockNumber}`) || [];
+    array?.push(element);
+    cache.set(`${element.blockNumber}`, array);
+  });
+  return cache;
+}
 
-  export function convertAddressToSubstrate(address: string) : string {
-    return encodeAddress(address, 42);
+export function convertAddressToSubstrate(address: string): string {
+  return encodeAddress(address, 42);
 }

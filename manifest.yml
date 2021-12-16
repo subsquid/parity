@@ -3,10 +3,10 @@ description: Parity manifest
 
 typegen:
   outDir: src/types
-  blockHash: '0x703332e126b87658aa008507325627e837b0f7ed6d49d44a086d24b540bdd3ec'
   events:
   # BalanceSet need to dealt also
     - registrar.Registered
+    - registrar.Deregistered
     - balances.NewAccount
     - balances.Transfer
     - balances.Endowed
@@ -54,8 +54,10 @@ mappings:
       handler: balancesWithdraw
     - event: balances.Slashed
       handler: balancesSlashed
-    # - event: registrar.Registered
-    #   handler: handleParachainRegistered
+    - event: registrar.Registered
+      handler: handleParachainRegistered
+    - event: registrar.Deregistered
+      handler: handleDeRegistered
     # - event: staking.Bonded
     #   handler: handleBondedBalance
     # - event: staking.Unbonded
@@ -90,4 +92,4 @@ mappings:
   preBlockHooks:
         - handler: initializeConstantsHandler
   postBlockHooks:
-  # range: '[ 9034309, ]' # Auction startednewleas 
+  range: '[ 7513581, ]' # Auction startednewleas 

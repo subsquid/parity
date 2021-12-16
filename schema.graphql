@@ -1,7 +1,7 @@
 # type Auction @entity {
 #   id: ID! #id is a required field
 #   blockNum: Int!
-#   status: String! 
+#   status: String!
 #   bids: [Bid]! @derivedFrom(field: "auction")
 #   # winningBids: [WinningBid]! @derivedFrom(field: "auction")
 #   leaseStart: Int
@@ -11,7 +11,7 @@
 #   closingStart: Int!
 #   closingEnd: Int!
 #   resultBlock: Int
-#   ongoing: Boolean! 
+#   ongoing: Boolean!
 #   parachainLeases: [ParachainLeases] @derivedFrom(field: "auction")
 #   createdAt:  DateTime!
 # }
@@ -40,18 +40,18 @@
 #   depositor: String!
 #   verifier: String
 #   cap: BigInt!
-#   raised: BigInt! 
+#   raised: BigInt!
 #   lockExpiredBlock: Int!
 #   blockNum: Int
 #   firstSlot: Int!
 #   lastSlot: Int!
-#   status: String! 
+#   status: String!
 #   leaseExpiredBlock: Int
 #   dissolvedBlock: Int
 #   updatedAt: DateTime
 #   createdAt: DateTime!
-#   isFinished: Boolean 
-#   wonAuctionId: String  
+#   isFinished: Boolean
+#   wonAuctionId: String
 #   contributions: [Contribution] @derivedFrom(field: "fund")
 # }
 
@@ -68,26 +68,26 @@
 # type ParachainLeases @entity {
 #   id: ID! # paraId-leaseRange-auction
 #   paraId: Int!
-#   parachain: Parachain! 
+#   parachain: Parachain!
 #   leaseRange: String!  #auctionId-start-end
 #   firstLease: Int!
 #   lastLease: Int!
 #   latestBidAmount: BigInt!
-#   auction: Auction 
+#   auction: Auction
 #   activeForAuction: String  #auctionId
 #   winningAmount: BigInt
 #   extraAmount: BigInt
 #   wonBidFrom: String
 #   numBlockWon: Int
 #   winningResultBlock: Int
-#   hasWon: Boolean! 
+#   hasWon: Boolean!
 # }
 
 # type Bid @entity {
 #   id: ID!
 #   auction: Auction!
 #   winningAuction: Int  # auctionId
-#   blockNum: Int! 
+#   blockNum: Int!
 #   parachain: Parachain!
 #   isCrowdloan: Boolean!
 #   amount: BigInt!
@@ -101,11 +101,11 @@
 # type Contribution @entity {
 #   id: ID!
 #   crowdloanId: String!
-#   account: String! 
+#   account: String!
 #   parachain: Parachain!
 #   fund: Crowdloan!
-#   amount: BigInt! 
-#   blockNum: Int! 
+#   amount: BigInt!
+#   blockNum: Int!
 #   createdAt: DateTime!
 # }
 
@@ -128,40 +128,45 @@
 # }
 
 type Token @entity {
-    id: ID!
-    tokenSymbol: String!
-    tokenName: String!
+  id: ID!
+  tokenSymbol: String!
+  tokenName: String!
 }
 
 type Balance @entity {
-    id: ID! #Account-TokenId
-    accountId: Account!
-    tokenId: Token!
-    timestamp: DateTime!
-    freeBalance: BigInt
-    bondedBalance: BigInt
-    vestedBalance: BigInt
+  id: ID! #Account-TokenId
+  accountId: Account!
+  tokenId: Token!
+  timestamp: DateTime!
+  freeBalance: BigInt
+  bondedBalance: BigInt
+  vestedBalance: BigInt
 }
 
-
 type Chains @entity {
-    id: ID!
-    nativeToken: Token!
-    chainName: String
-    relayId: ID!
-    relayChain: Boolean
+  id: ID!
+  nativeToken: Token
+  chainName: String
+  relayId: ID!
+  paraId: ID
+  relayChain: Boolean
+  createdAt: DateTime
+  creationBlock: Int
+  deregistered: Boolean
+  deposit: BigInt
+  manager: Account
 }
 
 type Transfers @entity {
-    id: ID!
-    senderAccount: Account!
-    receiverAccount: Account!
-    tokenId: Token!
-    amount: BigInt!
-    timestamp: DateTime!
+  id: ID!
+  senderAccount: Account!
+  receiverAccount: Account!
+  tokenId: Token!
+  amount: BigInt!
+  timestamp: DateTime!
 }
 
 type Account @entity {
-    id: ID! # Account Address
-    chainId: Chains!
+  id: ID! # Account Address
+  chainId: Chains!
 }

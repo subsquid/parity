@@ -12,4 +12,12 @@ export namespace Registrar {
     }
   }
 
+  export class DeregisteredEvent {
+    constructor(private event: SubstrateEvent) {}
+
+    get params(): [u32] {
+      return [create('u32', this.event.params[0].value)]
+    }
+  }
+
 }

@@ -43,3 +43,18 @@ export const handleParachainRegistered = async ({
 
   await store.save(parachain);
 };
+
+export const handleDeRegistered = async ({
+  store,
+  event,
+  block,
+}: EventContext & StoreContext): Promise<void> => {
+  const [paraId] = new Registrar.DeregisteredEvent(event).params;
+  const chain = await get(store, Chains, "", { paraId: paraId.toString() });
+  if (chain === undefined || chain === null) {
+    console.log("Chain not found with paraId ", paraId.toString());
+    return;
+  }
+  chain.deregistered = true;
+  await store.save(chain);
+};
