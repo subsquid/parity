@@ -14,6 +14,7 @@ ADD package.json .
 ADD package-lock.json .
 RUN npm ci # TODO: --production
 COPY --from=builder /hydra-build/lib lib
+COPY blocksStash .
 ADD db db
 ADD manifest.yml .
 ADD schema.graphql .
