@@ -1,33 +1,45 @@
-// import { EventContext, StoreContext } from "@subsquid/hydra-common";
-// import { Parachain } from "../generated/model";
-// import { Registrar } from "../types";
-// import { apiService } from "./helpers/api";
-// import { getOrCreate } from "./helpers/common";
+import { EventContext, StoreContext } from "@subsquid/hydra-common";
+import { createNewAccount, getBalance, getBalanceFromRPC } from ".";
+import { RELAY_CHAIN_DETAILS } from "../constants";
+import { Account, Chains } from "../generated/model";
+import { Registrar } from "../types";
+import { apiService } from "./helpers/api";
+import { get, timestampToDate } from "./helpers/common";
 
-// export const handleParachainRegistered = async ({
-//   store,
-//   event,
-//   block,
-// }: EventContext & StoreContext): Promise<void> => {
-//   const [paraId, managerId] = new Registrar.RegisteredEvent(event).params;
-//   const parachain = await getOrCreate(
-//     store,
-//     Parachain,
-//     `${paraId}-${managerId.toString()}`
-//   );
-  
-//   const api = await apiService();
-//   const apiAt = await api.at(block.hash);
-//   const { deposit } =
-//     (await apiAt.query.registrar.paras(paraId)).toJSON() ||
-//     ({ deposit: 0 } as any);
+export const handleParachainRegistered = async ({
+  store,
+  event,
+  block,
+}: EventContext & StoreContext): Promise<void> => {
+  const [paraId, managerId] = new Registrar.RegisteredEvent(event).params;
+  const parachain = new Chains({
+    paraId: paraId.toString(),
+    relayChain: false,
+    relayId: RELAY_CHAIN_DETAILS.id,
+  });
 
-//   parachain.paraId = paraId.toNumber();
-//   parachain.createdAt = new Date(block.timestamp);
-//   parachain.manager = managerId.toString();
-//   parachain.deposit = deposit;
-//   parachain.creationBlock = block.height;
-//   parachain.deregistered = false;
+  let managerAccount = await get(store, Account, managerId.toString());
+  if (managerAccount == undefined) {
+    const balance = await getBalanceFromRPC(block, managerId.toString());
+    [managerAccount] = await createNewAccount(
+      managerId.toString(),
+      balance.free,
+      balance.reserve,
+      timestampToDate(block),
+      store
+    );
+  }
 
-//   await store.save(parachain);
-// };
+  const api = await apiService(block.hash);
+  const { deposit } =
+    (await api.query.registrar.paras(paraId)).toJSON() ||
+    ({ deposit: 0 } as any);
+
+  parachain.createdAt = new Date(block.timestamp);
+  parachain.manager = managerAccount;
+  parachain.deposit = deposit;
+  parachain.creationBlock = block.height;
+  parachain.deregistered = false;
+
+  await store.save(parachain);
+};

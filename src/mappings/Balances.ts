@@ -131,10 +131,11 @@ export async function getBalance(
   if (balance === undefined || balance === null) {
     console.error(`Balance not found in ${method}`, from.toString());
     if (createIfNotFound) {
+      const balance = await getBalanceFromRPC(block, from);
       const [, newBalance] = await createNewAccount(
         from,
-        0n,
-        0n,
+        balance.free,
+        balance.reserve,
         timestampToDate(block),
         store
       );
