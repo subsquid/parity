@@ -3,8 +3,10 @@ async function m() {
   let api = await polk.ApiPromise.create({
     provider: new polk.WsProvider("wss://kusama-rpc.polkadot.io/"),
   });
-  const hash = await api.rpc.chain.getBlockHash(10154049);
-  const parentHash = await api.rpc.chain.getBlockHash(10154048);
+  const hash = await api.rpc.chain.getBlockHash(9434703);
+  const parentHash = await api.rpc.chain.getBlockHash(9434702);
+  const ADDR = "D3icRvk43Bj69ChTPkx5v4pEQKGqDY95hHXiBB1JBFVwtvP";
+
   //  api = await api.at(hash)
   //  const hash = '0xfa0b79064d7d480c1e31513b8c1116ef9d7a026a253befc16ec0ffeba0465ce0'
   //  const apiAt = await api.at(hash)
@@ -24,17 +26,22 @@ async function m() {
   // ]);
   // console.log(free.toBigInt());
 
-  const ADDR = "H4XieK3r3dq3VEvRtqZR7wN7a1UEkXxf14orRsEfdFjmgkF";
-
-  const [{ data: balanceNow }, { data: balancePrev }] = await Promise.all([
-    api.query.system.account.at(hash, ADDR),
-    api.query.system.account.at(parentHash, ADDR),
-  ]);
-  console.log(balanceNow.free.toBigInt(), balanceNow.reserved.toBigInt());
-  console.log(balancePrev.free.toBigInt(), balancePrev.reserved.toBigInt());
-  // console.log(
-  //   BigInt(balanceNow.toJSON().reserved),
-  //   BigInt(balancePrev.toJSON().reserved)
-  // );
+  const [{ data: balanceNow }, { data: balancePrev }, vestingNow, vestingPrev] =
+    await Promise.all([
+      api.query.system.account.at(hash, ADDR),
+      api.query.system.account.at(parentHash, ADDR),
+      api.query.vesting.vesting.at(hash, ADDR),
+      api.query.vesting.vesting.at(parentHash, ADDR),
+    ]);
+  console.log(
+    balanceNow.free.toBigInt(),
+    balanceNow.reserved.toBigInt(),
+    vestingNow.toJSON()
+  );
+  console.log(
+    balancePrev.free.toBigInt(),
+    balancePrev.reserved.toBigInt(),
+    parseInt(vestingPrev.toJSON().locked)
+  );
 }
 m();

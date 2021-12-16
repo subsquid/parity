@@ -1,17 +1,14 @@
 import {
   DatabaseManager,
   EventContext,
-  ExtrinsicInfo,
   StoreContext,
   SubstrateBlock,
-  SubstrateEvent,
-  SubstrateExtrinsic,
 } from "@subsquid/hydra-common";
 import { NATIVE_TOKEN_DETAILS, RELAY_CHAIN_DETAILS } from "../constants";
 import { Account, Balance, Chains, Token, Transfers } from "../generated/model";
 import { Balances } from "../types/Balances";
-import { allBlockExtrinsics, apiService } from "./helpers/api";
-import { get, getOrCreate, timestampToDate } from "./helpers/common";
+import { apiService } from "./helpers/api";
+import { get, timestampToDate } from "./helpers/common";
 import { logErrorToFile } from "./helpers/log";
 
 // Please Note
@@ -129,12 +126,15 @@ export async function getBalance(
   );
 
   if (balance === undefined || balance === null) {
-    console.error(`Balance not found in ${method}`, from.toString());
+    let error = `Balance not found in ${method} ${from.toString()} when getting balance`;
+    console.error(error);
     if (createIfNotFound) {
+      logErrorToFile(error);
+      const balance = await getBalanceFromRPC(block, from);
       const [, newBalance] = await createNewAccount(
         from,
-        0n,
-        0n,
+        balance.free,
+        balance.reserve,
         timestampToDate(block),
         store
       );
@@ -313,6 +313,9 @@ export const balanceTransfer = async ({
     : (balanceTo?.freeBalance || 0n) + amount.toBigInt();
 
   await Promise.all([store.save(balanceFrom), store.save(balanceTo)]);
+  if (nativeToken == undefined) {
+    await setTokenDetails(store);
+  }
 
   const transfer = new Transfers({
     senderAccount: accountFrom,
@@ -335,7 +338,8 @@ export const balanceDestroy = async ({
     from.toString(),
     "Balances DustLost",
     store,
-    block
+    block,
+    true
   );
 
   balance.bondedBalance = 0n;
