@@ -1,7 +1,6 @@
 import { DatabaseManager, SubstrateBlock } from "@subsquid/hydra-common";
 import { encodeAddress } from "@polkadot/util-crypto";
 import { apiService, BlockEvent, BlockExtrinisic } from "./api";
-// import { Bid } from "@polkadot/types/interfaces";
 import { Auction } from "../../generated/model/auction.model";
 import { AuctionParachain } from "../../generated/model/auctionParachain.model";
 import { Bid } from "../../generated/model/bid.model";
@@ -9,7 +8,6 @@ import { Crowdloan } from "../../generated/model/crowdloan.model";
 import { CrowdloanSequence } from "../../generated/model/crowdloanSequence.model";
 import { Chains } from "../../generated/model/chains.model";
 import { ParachainLeases } from "../../generated/model/parachainLeases.model";
-// import { Crowdloan } from "../../types";
 import { ParachainReturn, CrowdloanReturn } from "./types";
 import {
   fetchCrowdloan,

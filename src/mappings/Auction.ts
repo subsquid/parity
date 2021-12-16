@@ -17,11 +17,8 @@ import { Auctions } from "../types";
 import { apiService } from "./helpers/api";
 import { CHRONICLE_KEY } from "../constants";
 import {
-  //   ensureFund,
   ensureParachain,
   get,
-  getByAuctionParachain,
-  getByAuctions,
   getLatestCrowdloanId,
   getOrCreate,
   getOrUpdate,

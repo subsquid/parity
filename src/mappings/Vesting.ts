@@ -1,6 +1,5 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
-import { getBalance } from ".";
-import { Staking } from "../types";
+import { getBalance } from "./Balances";
 import { Vesting } from "../types/Vesting";
 
 export async function handleVestingUpdated({

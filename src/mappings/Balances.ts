@@ -1,18 +1,14 @@
 import {
   DatabaseManager,
   EventContext,
-  ExtrinsicInfo,
   StoreContext,
   SubstrateBlock,
-  SubstrateEvent,
-  SubstrateExtrinsic,
 } from "@subsquid/hydra-common";
 import { NATIVE_TOKEN_DETAILS, RELAY_CHAIN_DETAILS } from "../constants";
 import { Account, Balance, Chains, Token, Transfers } from "../generated/model";
-import { Staking } from "../types";
 import { Balances } from "../types/Balances";
-import { allBlockExtrinsics, apiService } from "./helpers/api";
-import { get, getOrCreate, timestampToDate } from "./helpers/common";
+import { apiService } from "./helpers/api";
+import { get, timestampToDate } from "./helpers/common";
 import { logErrorToFile } from "./helpers/log";
 
 // Please Note

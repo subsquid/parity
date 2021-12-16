@@ -11,7 +11,6 @@ import { apiService } from "./helpers/api";
 import {
   ensureFund,
   ensureParachain,
-  getOrCreate,
   getOrUpdate,
   isFundAddress,
 } from "./helpers/common";

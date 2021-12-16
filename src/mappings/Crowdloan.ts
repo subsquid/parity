@@ -1,9 +1,7 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
 import { ensureFund, ensureParachain, get } from "./helpers/common";
-import { parseNumber, getParachainId } from "./helpers/utils";
 import {
   Contribution,
-  Chains,
   Crowdloan as CrowdloanModel,
   Account,
 } from "../generated/model";
