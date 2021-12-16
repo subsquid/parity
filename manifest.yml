@@ -32,6 +32,8 @@ typegen:
     - crowdloan.Dissolved
     - staking.Bonded
     - staking.Unbonded
+    - vesting.VestingUpdated
+    - vesting.VestingCompleted
 
 mappings:
   mappingsModule: lib/mappings
@@ -88,6 +90,10 @@ mappings:
       handler: handleCrowdloanContributed
     - event: crowdloan.Dissolved
       handler: handleCrowdloanDissolved
+    - event: vesting.VestingUpdated
+      handler: handleVestingUpdated
+    - event: vesting.VestingCompleted
+      handler: handleVestingCompleted
 
 
   extrinsicHandlers:

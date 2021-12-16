@@ -5,3 +5,4 @@ export * from "./Registrar";
 export * from "./Staking";
 export * from "./Initialize";
 export * from "./Balances";
+export * from "./Vesting";
