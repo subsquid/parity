@@ -234,7 +234,7 @@ export const newBalanceSetHandler = async ({
   const [to, balance] = new Balances.BalanceSetEvent(event).params;
   const blockNumber = block.height;
 
-  const newAccountEvent = cacheNewAccountEvents[blockNumber][to.toString()];
+  const newAccountEvent = cacheNewAccountEvents[blockNumber]?.[to.toString()];
 
   if (newAccountEvent?.extrinsicId === extrinsic?.id) {
     // already processed in new account, skipping
@@ -302,7 +302,7 @@ export const balanceTransfer = async ({
   balanceFrom.freeBalance =
     (balanceFrom?.freeBalance || 0n) - amount.toBigInt();
 
-  let newAccountEvent = cacheNewAccountEvents[block.height][to.toString()];
+  let newAccountEvent = cacheNewAccountEvents[block.height]?.[to.toString()];
 
   // Skip balance to if already done in new account creation
   let skipToBalanceProcess =
