@@ -31,7 +31,7 @@ interface balanceRPCResponse {
 /**
  * Caches Relay Chain details
  */
-export async function setRelayChain(
+export async function setAndGetRelayChain(
   store: DatabaseManager,
   relayChainDetails = RELAY_CHAIN_DETAILS
 ) {
@@ -41,6 +41,7 @@ export async function setRelayChain(
     process.exit(0);
   }
   relayChain = chain;
+  return chain;
 }
 
 /**
@@ -77,7 +78,7 @@ export async function getBalanceFromRPC(
 /**
  * Caches native token details
  */
-export async function setTokenDetails(
+export async function setAndGetTokenDetails(
   store: DatabaseManager,
   tokenDetails = NATIVE_TOKEN_DETAILS
 ) {
@@ -87,6 +88,7 @@ export async function setTokenDetails(
     process.exit(0);
   }
   nativeToken = token;
+  return token;
 }
 
 /**
@@ -146,6 +148,31 @@ export async function getBalance(
 }
 
 /**
+ * Create account if not found
+ * @param  address
+ * @param store
+ * @param block
+ * @returns {Account}
+ */
+export const createAccountIfNotPresent = async (
+  address: string,
+  store: DatabaseManager,
+  block: SubstrateBlock
+) => {
+  let account = await get(store, Account, address);
+  if (account == undefined || account == null) {
+    const balance = await getBalanceFromRPC(block, address);
+    [account] = await createNewAccount(
+      address,
+      balance.free,
+      balance.reserve,
+      timestampToDate(block),
+      store
+    );
+  }
+  return account;
+};
+/**
  * Creates a new account
  * @param {string} accountId
  * @param {DatabaseManager} store
@@ -159,10 +186,10 @@ export const createNewAccount = async (
   store: DatabaseManager
 ): Promise<[Account, Balance]> => {
   if (relayChain == undefined) {
-    await setRelayChain(store);
+    await setAndGetRelayChain(store);
   }
   if (nativeToken == undefined) {
-    await setTokenDetails(store);
+    await setAndGetTokenDetails(store);
   }
 
   const newAccount = new Account({
@@ -314,7 +341,7 @@ export const balanceTransfer = async ({
 
   await Promise.all([store.save(balanceFrom), store.save(balanceTo)]);
   if (nativeToken == undefined) {
-    await setTokenDetails(store);
+    await setAndGetTokenDetails(store);
   }
 
   const transfer = new Transfers({
@@ -359,7 +386,8 @@ export const balancesReserved = async ({
     from.toString(),
     "Balances Reserved",
     store,
-    block
+    block,
+    true
   );
 
   balance.bondedBalance = (balance.bondedBalance || 0n) + amount.toBigInt();
@@ -378,7 +406,8 @@ export const balancesUnReserved = async ({
     from.toString(),
     "Balances UnReserved",
     store,
-    block
+    block,
+    true
   );
 
   balance.bondedBalance = (balance.bondedBalance || 0n) - amount.toBigInt();
@@ -416,7 +445,8 @@ export const balancesWithdraw = async ({
     from.toString(),
     "Balances withdraw",
     store,
-    block
+    block,
+    true
   );
 
   balance.freeBalance = (balance.freeBalance || 0n) - amount.toBigInt();
@@ -434,7 +464,8 @@ export const balancesSlashed = async ({
     from.toString(),
     "Balances Slashed",
     store,
-    block
+    block,
+    true
   );
 
   balance.freeBalance = (balance.freeBalance || 0n) - amount.toBigInt();

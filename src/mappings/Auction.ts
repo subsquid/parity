@@ -163,16 +163,22 @@ const markParachainLeases = async (
   const parachain = await store.find(Chains, {
     where: { id: parachainId },
   });
+
+  // TODO: Check schema and remove some redundant fields
   await getOrUpdate(store, ParachainLeases, `${paraId}-${leaseRange}`, {
     paraId,
     leaseRange,
     parachain: parachain[0],
     firstLease: leaseStart,
     lastLease: leaseEnd,
+    leaseExpiredBlock: block.height,
+    leaseStart: leaseStart,
+    leaseEnd: leaseEnd,
     auctionId: auctionId?.toString(),
     latestBidAmount: bidAmount,
     activeForAuction: auctionId?.toString(),
     hasWon: false,
+    won: false,
   });
 };
 
@@ -197,7 +203,7 @@ export const handleBidAccepted = async ({
   const parachain = await ensureParachain(paraId.toNumber(), store, block);
   const { id: parachainId } = parachain;
 
-  const fundId = await getLatestCrowdloanId(parachainId, store);
+  const fundId = await getLatestCrowdloanId(parachainId, store, block);
   let auction = await store.find(Auction, {
     where: { id: auctionId.toString() },
   });

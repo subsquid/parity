@@ -1,5 +1,11 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
-import { createNewAccount, getBalance, getBalanceFromRPC } from ".";
+import {
+  createAccountIfNotPresent,
+  createNewAccount,
+  getBalance,
+  getBalanceFromRPC,
+  setAndGetRelayChain,
+} from ".";
 import { RELAY_CHAIN_DETAILS } from "../constants";
 import { Account, Chains } from "../generated/model";
 import { Registrar } from "../types";
@@ -13,22 +19,17 @@ export const handleParachainRegistered = async ({
 }: EventContext & StoreContext): Promise<void> => {
   const [paraId, managerId] = new Registrar.RegisteredEvent(event).params;
   const parachain = new Chains({
+    id: `${paraId}-${managerId.toString()}`,
     paraId: paraId.toNumber(),
     relayChain: false,
     relayId: RELAY_CHAIN_DETAILS.id,
   });
 
-  let managerAccount = await get(store, Account, managerId.toString());
-  if (managerAccount == undefined) {
-    const balance = await getBalanceFromRPC(block, managerId.toString());
-    [managerAccount] = await createNewAccount(
-      managerId.toString(),
-      balance.free,
-      balance.reserve,
-      timestampToDate(block),
-      store
-    );
-  }
+  let managerAccount = await createAccountIfNotPresent(
+    managerId.toString(),
+    store,
+    block
+  );
 
   const api = await apiService(block.hash);
   const { deposit } =
@@ -40,6 +41,7 @@ export const handleParachainRegistered = async ({
   parachain.deposit = deposit;
   parachain.creationBlock = block.height;
   parachain.deregistered = false;
+  parachain.relayChain = false;
 
   await store.save(parachain);
 };
