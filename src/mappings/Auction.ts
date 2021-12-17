@@ -169,10 +169,14 @@ const markParachainLeases = async (
     parachain: parachain[0],
     firstLease: leaseStart,
     lastLease: leaseEnd,
+    leaseExpiredBlock: block.height,
+    leaseStart: leaseStart,
+    leaseEnd: leaseEnd,
     auctionId: auctionId?.toString(),
     latestBidAmount: bidAmount,
     activeForAuction: auctionId?.toString(),
     hasWon: false,
+    won: false,
   });
 };
 
