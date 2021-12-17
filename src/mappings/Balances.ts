@@ -384,7 +384,8 @@ export const balancesReserved = async ({
     from.toString(),
     "Balances Reserved",
     store,
-    block
+    block,
+    true
   );
 
   balance.bondedBalance = (balance.bondedBalance || 0n) + amount.toBigInt();
@@ -403,7 +404,8 @@ export const balancesUnReserved = async ({
     from.toString(),
     "Balances UnReserved",
     store,
-    block
+    block,
+    true
   );
 
   balance.bondedBalance = (balance.bondedBalance || 0n) - amount.toBigInt();
@@ -441,7 +443,8 @@ export const balancesWithdraw = async ({
     from.toString(),
     "Balances withdraw",
     store,
-    block
+    block,
+    true
   );
 
   balance.freeBalance = (balance.freeBalance || 0n) - amount.toBigInt();
@@ -459,7 +462,8 @@ export const balancesSlashed = async ({
     from.toString(),
     "Balances Slashed",
     store,
-    block
+    block,
+    true
   );
 
   balance.freeBalance = (balance.freeBalance || 0n) - amount.toBigInt();
