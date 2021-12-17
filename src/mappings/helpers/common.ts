@@ -238,8 +238,11 @@ export const ensureFund = async (
   } = fund || ({} as CrowdloanReturn);
 
   const test: any = null;
+  // TODO: Check this out, it should be an account but coming as string
+  const despositor: any = rest.depositor;
+  const verifier: any = rest.verifier;
   rest.depositor = await createAccountIfNotPresent(
-    convertAddressToSubstrate(rest.depositor.id),
+    convertAddressToSubstrate(despositor),
     store,
     block
   );
@@ -247,7 +250,7 @@ export const ensureFund = async (
     rest.verifier == null
       ? null
       : await createAccountIfNotPresent(
-          convertAddressToSubstrate(rest.verifier.id),
+          convertAddressToSubstrate(verifier),
           store,
           block
         );

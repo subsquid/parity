@@ -4,6 +4,7 @@ import {
   ensureFund,
   ensureParachain,
   get,
+  timestampToDate,
 } from "./helpers/common";
 import {
   Contribution,
@@ -77,5 +78,7 @@ export async function handleCrowdloanDissolved({
     isFinished: true,
     updatedAt: new Date(createdAt),
     dissolvedBlock: blockNum,
+    dissolved: true,
+    dissolvedDate: timestampToDate(block),
   });
 }
