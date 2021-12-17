@@ -96,6 +96,9 @@ export const loadGenesisData = async ({
     chainName: RELAY_CHAIN_DETAILS.chainName,
     relayId: RELAY_CHAIN_DETAILS.id,
     relayChain: RELAY_CHAIN_DETAILS.relayChain,
+    creationBlock: 0,
+    deregistered: false,
+    deposit: 0n,
   });
 
   await store.save(relayChain);
