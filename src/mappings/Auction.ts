@@ -163,6 +163,8 @@ const markParachainLeases = async (
   const parachain = await store.find(Chains, {
     where: { id: parachainId },
   });
+
+  // TODO: Check schema and remove some redundant fields
   await getOrUpdate(store, ParachainLeases, `${paraId}-${leaseRange}`, {
     paraId,
     leaseRange,
