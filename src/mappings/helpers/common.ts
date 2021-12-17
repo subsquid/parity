@@ -15,8 +15,9 @@ import {
   parseNumber,
   parseBigInt,
 } from "./utils";
-import { CROWDLOAN_STATUS } from "../../constants";
+import { CROWDLOAN_STATUS, RELAY_CHAIN_DETAILS } from "../../constants";
 import { ApiPromise } from "@polkadot/api";
+import { createAccountIfNotPresent } from "..";
 
 type EntityConstructor<T> = {
   new (...args: any[]): T;
@@ -138,11 +139,14 @@ export const ensureParachain = async (
     manager: "",
     deposit: "",
   };
-  const parachainId = `${paraId}-${manager}`;
+  const address = convertAddressToSubstrate(manager);
+  const managerAccount = await createAccountIfNotPresent(address, store, block);
+  const parachainId = `${paraId}-${address}`;
   return await getOrUpdate<Chains>(store, Chains, parachainId, {
     id: parachainId,
     paraId,
-    manager,
+    manager: managerAccount,
+    relayId: RELAY_CHAIN_DETAILS.relayId,
     deposit,
     deregistered: false,
   });

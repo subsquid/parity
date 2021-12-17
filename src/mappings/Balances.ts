@@ -146,6 +146,31 @@ export async function getBalance(
 }
 
 /**
+ * Create account if not found
+ * @param  address
+ * @param store
+ * @param block
+ * @returns {Account}
+ */
+export const createAccountIfNotPresent = async (
+  address: string,
+  store: DatabaseManager,
+  block: SubstrateBlock
+) => {
+  let account = await get(store, Account, address);
+  if (account == undefined || account == null) {
+    const balance = await getBalanceFromRPC(block, address);
+    [account] = await createNewAccount(
+      address,
+      balance.free,
+      balance.reserve,
+      timestampToDate(block),
+      store
+    );
+  }
+  return account;
+};
+/**
  * Creates a new account
  * @param {string} accountId
  * @param {DatabaseManager} store
