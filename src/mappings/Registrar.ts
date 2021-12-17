@@ -4,6 +4,7 @@ import {
   createNewAccount,
   getBalance,
   getBalanceFromRPC,
+  setAndGetRelayChain,
 } from ".";
 import { RELAY_CHAIN_DETAILS } from "../constants";
 import { Account, Chains } from "../generated/model";
@@ -40,6 +41,7 @@ export const handleParachainRegistered = async ({
   parachain.deposit = deposit;
   parachain.creationBlock = block.height;
   parachain.deregistered = false;
+  parachain.relayChain = false;
 
   await store.save(parachain);
 };

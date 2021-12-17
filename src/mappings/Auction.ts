@@ -197,7 +197,7 @@ export const handleBidAccepted = async ({
   const parachain = await ensureParachain(paraId.toNumber(), store, block);
   const { id: parachainId } = parachain;
 
-  const fundId = await getLatestCrowdloanId(parachainId, store);
+  const fundId = await getLatestCrowdloanId(parachainId, store, block);
   let auction = await store.find(Auction, {
     where: { id: auctionId.toString() },
   });

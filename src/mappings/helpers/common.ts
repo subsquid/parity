@@ -17,7 +17,11 @@ import {
 } from "./utils";
 import { CROWDLOAN_STATUS, RELAY_CHAIN_DETAILS } from "../../constants";
 import { ApiPromise } from "@polkadot/api";
-import { createAccountIfNotPresent } from "..";
+import {
+  createAccountIfNotPresent,
+  setAndGetRelayChain,
+  setAndGetTokenDetails,
+} from "..";
 
 type EntityConstructor<T> = {
   new (...args: any[]): T;
@@ -102,7 +106,7 @@ export function constructCache<T extends BlockExtrinisic | BlockEvent>(
 }
 
 export function convertAddressToSubstrate(address: string): string {
-  return encodeAddress(address, 42);
+  return (address && encodeAddress(address, 42)) || "";
 }
 
 /**
@@ -142,12 +146,15 @@ export const ensureParachain = async (
   const address = convertAddressToSubstrate(manager);
   const managerAccount = await createAccountIfNotPresent(address, store, block);
   const parachainId = `${paraId}-${address}`;
+  const relayChain = await setAndGetRelayChain(store);
   return await getOrUpdate<Chains>(store, Chains, parachainId, {
     id: parachainId,
     paraId,
+    creationBlock: block.height,
     manager: managerAccount,
     relayId: RELAY_CHAIN_DETAILS.relayId,
-    deposit,
+    relayChain: false,
+    deposit: deposit,
     deregistered: false,
   });
 };
@@ -170,9 +177,10 @@ export const getIsReCreateCrowdloan = async (
 
 export const getLatestCrowdloanId = async (
   parachainId: string,
-  store: DatabaseManager
+  store: DatabaseManager,
+  block: SubstrateBlock
 ) => {
-  const api = await apiService();
+  const api = await apiService(block.hash);
   const [seq] = await store.find(CrowdloanSequence, {
     where: { id: parachainId },
   });
@@ -217,7 +225,7 @@ export const ensureFund = async (
     take: 1,
   });
 
-  const fundId = await getLatestCrowdloanId(parachainId, store);
+  const fundId = await getLatestCrowdloanId(parachainId, store, block);
   const {
     cap,
     end,
@@ -230,11 +238,27 @@ export const ensureFund = async (
   } = fund || ({} as CrowdloanReturn);
 
   const test: any = null;
-
+  rest.depositor = await createAccountIfNotPresent(
+    convertAddressToSubstrate(rest.depositor.id),
+    store,
+    block
+  );
+  rest.verifier =
+    rest.verifier == null
+      ? null
+      : await createAccountIfNotPresent(
+          convertAddressToSubstrate(rest.verifier.id),
+          store,
+          block
+        );
+  // TODO: Change after we integrate multiple tokens
+  const token = await setAndGetTokenDetails(store);
   return getOrUpdate<Crowdloan>(store, Crowdloan, fundId, test, (cur: any) => {
     return !cur
       ? new Crowdloan({
           id: fundId,
+          paraId: paraId,
+          tokenId: token,
           parachain: parachain[0],
           ...rest,
           firstSlot: firstPeriod,

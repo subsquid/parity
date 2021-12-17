@@ -1,6 +1,7 @@
 import { ApiPromise } from "@polkadot/api";
 import { SubstrateBlock } from "@subsquid/hydra-common";
 import { apiService } from "./api";
+import { convertAddressToSubstrate } from "./common";
 import { CrowdloanReturn, ParachainReturn } from "./types";
 
 export const parseNumber = (hexOrNum: string | number | undefined): number => {
@@ -26,7 +27,8 @@ export const getParachainId = async (
   block: SubstrateBlock
 ) => {
   if (typeof paraId === "number") {
-    const { manager } = (await fetchParachain(paraId, block)) || {};
+    let { manager } = (await fetchParachain(paraId, block)) || {};
+    manager = convertAddressToSubstrate(manager || "");
     return `${paraId}-${manager || ""}`;
   }
   const { manager } = paraId || {};
