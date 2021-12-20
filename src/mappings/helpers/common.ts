@@ -250,7 +250,7 @@ export const ensureFund = async (
     rest.verifier == null
       ? null
       : await createAccountIfNotPresent(
-          convertAddressToSubstrate(verifier),
+          convertAddressToSubstrate(verifier?.sr25519),
           store,
           block
         );
