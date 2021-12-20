@@ -60,20 +60,11 @@ export class Crowdloan {
   @Column_("bool", {nullable: true})
   dissolved!: boolean | undefined | null
 
-  @Column_("bool", {nullable: true})
-  won!: boolean | undefined | null
-
   @Column_("timestamp with time zone", {nullable: true})
   dissolvedDate!: Date | undefined | null
 
   @Column_("integer", {nullable: true})
   dissolvedBlock!: number | undefined | null
-
-  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
-  leaseStart!: bigint | undefined | null
-
-  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
-  leaseEnd!: bigint | undefined | null
 
   @Column_("timestamp with time zone", {nullable: true})
   updatedAt!: Date | undefined | null

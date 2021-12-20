@@ -32,11 +32,8 @@ type Crowdloan @entity {
   status: String!
   leaseExpiredBlock: Int
   dissolved: Boolean
-  won: Boolean
   dissolvedDate: DateTime
   dissolvedBlock: Int
-  leaseStart: BigInt
-  leaseEnd: BigInt
   updatedAt: DateTime
   createdAt: DateTime!
   isFinished: Boolean
@@ -94,7 +91,6 @@ type Contribution @entity {
   parachain: Chains!
   fund: Crowdloan!
   amount: BigInt!
-  withdrawal: Boolean
   blockNum: Int!
   timestamp: DateTime!
 }
