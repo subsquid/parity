@@ -197,7 +197,7 @@ export const handleBidAccepted = async ({
   const [from, paraId, amount, firstSlot, lastSlot] =
     new Auctions.BidAcceptedEvent(event).params;
   const auctionId = (
-    await api.query.auctions.auctionCounter.at(block.hash)
+    await api.query.auctions.auctionCounter()
   ).toJSON() as number;
   const isFund = await isFundAddress(from.toString());
   const parachain = await ensureParachain(paraId.toNumber(), store, block);
