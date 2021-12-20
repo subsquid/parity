@@ -3,6 +3,7 @@ import {
   EventContext,
   StoreContext,
   SubstrateBlock,
+  SubstrateExtrinsic,
 } from "@subsquid/hydra-common";
 import { NATIVE_TOKEN_DETAILS, RELAY_CHAIN_DETAILS } from "../constants";
 import { Account, Balance, Chains, Token, Transfers } from "../generated/model";
@@ -221,6 +222,76 @@ export const createNewAccount = async (
   return [newAccount, balance];
 };
 
+/**
+ * Handles transfer of balance
+ * @param {string} from
+ * @param {string} to
+ * @param {bigint} amount
+ * @param {SubstrateExtrinsic} extrinsic
+ * @param {DatabaseManager} store
+ * @param {SubstrateBlock} block
+ * @returns { Promise<[Account, Account]>}
+ */
+export async function accountBalanceTransfer(
+  from: string,
+  to: string,
+  amount: bigint,
+  fromReserve: boolean,
+  toReserve: boolean,
+  extrinsic: SubstrateExtrinsic | undefined,
+  store: DatabaseManager,
+  block: SubstrateBlock
+): Promise<[Account, Account]> {
+  let [accountFrom, accountTo] = await Promise.all([
+    get(store, Account, from.toString()),
+    get(store, Account, to.toString()),
+  ]);
+
+  if (accountFrom == undefined) {
+    console.error("Account not found ", from.toString());
+    [accountFrom] = await createAccountIfNotPresent(from, store, block);
+    await logErrorToFile(
+      `From Account ${from.toString()} not found at block ${block.height}`
+    );
+  }
+  if (accountTo == undefined) {
+    [accountTo] = await createAccountIfNotPresent(to.toString(), store, block);
+  }
+
+  let [balanceFrom, balanceTo] = await Promise.all([
+    get(store, Balance, getBalanceId(from.toString())),
+    get(store, Balance, getBalanceId(to.toString())),
+  ]);
+
+  if (balanceFrom == null || balanceTo == null) {
+    console.error(`balances not found, `, from.toString(), to.toString());
+    process.exit(0);
+  }
+  if (!fromReserve) {
+    balanceFrom.freeBalance = (balanceFrom?.freeBalance || 0n) - amount;
+  } else {
+    balanceFrom.bondedBalance = (balanceFrom?.bondedBalance || 0n) - amount;
+  }
+
+  let newAccountEvent = cacheNewAccountEvents[block.height]?.[to.toString()];
+
+  // Skip balance to if already done in new account creation
+  let skipToBalanceProcess =
+    newAccountEvent?.extrinsicId === extrinsic?.id &&
+    newAccountEvent?.amount === amount;
+
+  if (!toReserve) {
+    balanceTo.freeBalance = skipToBalanceProcess
+      ? balanceTo.freeBalance
+      : (balanceTo?.freeBalance || 0n) + amount;
+  } else {
+    balanceTo.bondedBalance = (balanceTo?.bondedBalance || 0n) + amount;
+  }
+
+  await Promise.all([store.save(balanceFrom), store.save(balanceTo)]);
+  return [accountFrom, accountTo];
+}
+
 interface newAccountCache {
   [blockNumber: number]: {
     [address: string]: {
@@ -289,6 +360,26 @@ export const newBalanceSetHandler = async ({
   await store.save(balanceTo);
 };
 
+export const balanceReserveRepatriated = async ({
+  store,
+  event,
+  block,
+  extrinsic,
+}: EventContext & StoreContext): Promise<void> => {
+  const [from, to, amount] = new Balances.ReserveRepatriatedEvent(event).params;
+  const transferToType = event.params[3].value === "Reserved";
+  await accountBalanceTransfer(
+    from.toString(),
+    to.toString(),
+    amount.toBigInt(),
+    true,
+    transferToType,
+    extrinsic,
+    store,
+    block
+  );
+};
+
 export const balanceTransfer = async ({
   store,
   event,
@@ -297,49 +388,17 @@ export const balanceTransfer = async ({
 }: EventContext & StoreContext): Promise<void> => {
   const [from, to, amount] = new Balances.TransferEvent(event).params;
 
-  let [accountFrom, accountTo] = await Promise.all([
-    get(store, Account, from.toString()),
-    get(store, Account, to.toString()),
-  ]);
+  let [accountFrom, accountTo] = await accountBalanceTransfer(
+    from.toString(),
+    to.toString(),
+    amount.toBigInt(),
+    false,
+    false,
+    extrinsic,
+    store,
+    block
+  );
 
-  if (accountFrom == undefined) {
-    console.error("Account not found ", from.toString());
-    [accountFrom] = await createAccountIfNotPresent(
-      from.toString(),
-      store,
-      block
-    );
-    await logErrorToFile(
-      `From Account ${from.toString()} not found at block ${block.height}`
-    );
-  }
-  if (accountTo == undefined) {
-    [accountTo] = await createAccountIfNotPresent(to.toString(), store, block);
-  }
-
-  let [balanceFrom, balanceTo] = await Promise.all([
-    get(store, Balance, getBalanceId(from.toString())),
-    get(store, Balance, getBalanceId(to.toString())),
-  ]);
-
-  if (balanceFrom == null || balanceTo == null) {
-    console.error(`balances not found, `, from.toString(), to.toString());
-    process.exit(0);
-  }
-  balanceFrom.freeBalance =
-    (balanceFrom?.freeBalance || 0n) - amount.toBigInt();
-
-  let newAccountEvent = cacheNewAccountEvents[block.height]?.[to.toString()];
-
-  // Skip balance to if already done in new account creation
-  let skipToBalanceProcess =
-    newAccountEvent?.extrinsicId === extrinsic?.id &&
-    newAccountEvent?.amount === amount.toBigInt();
-  balanceTo.freeBalance = skipToBalanceProcess
-    ? balanceTo.freeBalance
-    : (balanceTo?.freeBalance || 0n) + amount.toBigInt();
-
-  await Promise.all([store.save(balanceFrom), store.save(balanceTo)]);
   if (nativeToken == undefined) {
     await setAndGetTokenDetails(store);
   }
