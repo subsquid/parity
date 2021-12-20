@@ -31,9 +31,6 @@ export class Contribution {
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
   amount!: bigint
 
-  @Column_("bool", {nullable: true})
-  withdrawal!: boolean | undefined | null
-
   @Column_("integer", {nullable: false})
   blockNum!: number
 
