@@ -42,6 +42,8 @@ mappings:
       handler: newAccountHandler
     - event: balances.BalanceSet
       handler: newBalanceSetHandler
+    - event: balances.ReserveRepatriated
+      handler: balanceReserveRepatriated
     - event: balances.Endowed
       handler: newAccountHandler
     - event: balances.Transfer
@@ -96,4 +98,4 @@ mappings:
       filter:
        height: '[0,9051]' # will be executed only at genesis
   # postBlockHooks:
-  # # range: '[ 7513581, ]' # Auction startednewleas 
+  # # range: '[ 7513581, ]' # Auction starts
