@@ -1,16 +1,10 @@
 import { EventContext, StoreContext } from "@subsquid/hydra-common";
-import {
-  createAccountIfNotPresent,
-  createNewAccount,
-  getBalance,
-  getBalanceFromRPC,
-  setAndGetRelayChain,
-} from ".";
+import { createAccountIfNotPresent } from ".";
 import { RELAY_CHAIN_DETAILS } from "../constants";
-import { Account, Chains } from "../generated/model";
+import { Chains } from "../generated/model";
 import { Registrar } from "../types";
 import { apiService } from "./helpers/api";
-import { get, timestampToDate } from "./helpers/common";
+import { get } from "./helpers/common";
 
 export const handleParachainRegistered = async ({
   store,
@@ -25,7 +19,7 @@ export const handleParachainRegistered = async ({
     relayId: RELAY_CHAIN_DETAILS.id,
   });
 
-  let managerAccount = await createAccountIfNotPresent(
+  let [managerAccount] = await createAccountIfNotPresent(
     managerId.toString(),
     store,
     block

@@ -241,16 +241,16 @@ export const ensureFund = async (
   // TODO: Check this out, it should be an account but coming as string
   const despositor: any = rest.depositor;
   const verifier: any = rest.verifier;
-  rest.depositor = await createAccountIfNotPresent(
+  [rest.depositor] = await createAccountIfNotPresent(
     convertAddressToSubstrate(despositor),
     store,
     block
   );
-  rest.verifier =
+  [rest.verifier] =
     rest.verifier == null
-      ? null
+      ? [null]
       : await createAccountIfNotPresent(
-          convertAddressToSubstrate(verifier),
+          convertAddressToSubstrate(verifier?.sr25519),
           store,
           block
         );

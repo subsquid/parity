@@ -55,7 +55,7 @@ export async function handleAuctionStarted({
   auction.ongoing = true;
   await store.save(auction);
 
-  const chronicle = await get(store, Chronicle, "ChronicleKey");
+  const chronicle = await get(store, Chronicle, CHRONICLE_KEY);
   if (!chronicle) {
     console.error("Chronicle not defined. Exiting");
     process.exit(1);
@@ -82,7 +82,7 @@ export async function handleAuctionClosed({
 
   await store.save(auction);
 
-  const chronicle = await get(store, Chronicle, "ChronicleKey");
+  const chronicle = await get(store, Chronicle, CHRONICLE_KEY);
   if (!chronicle) {
     console.error("Chronicle not defined. Exiting");
     process.exit(1);
@@ -197,7 +197,7 @@ export const handleBidAccepted = async ({
   const [from, paraId, amount, firstSlot, lastSlot] =
     new Auctions.BidAcceptedEvent(event).params;
   const auctionId = (
-    await api.query.auctions.auctionCounter.at(block.hash)
+    await api.query.auctions.auctionCounter()
   ).toJSON() as number;
   const isFund = await isFundAddress(from.toString());
   const parachain = await ensureParachain(paraId.toNumber(), store, block);

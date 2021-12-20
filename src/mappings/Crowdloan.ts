@@ -38,7 +38,7 @@ export async function handleCrowdloanContributed({
   const fund = await ensureFund(fundIdx.toNumber(), store, block);
   const fundId = fund.id;
 
-  const contributor = await createAccountIfNotPresent(
+  const [contributor,] = await createAccountIfNotPresent(
     convertAddressToSubstrate(contributorId.toString()),
     store,
     block
