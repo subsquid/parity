@@ -55,7 +55,7 @@ export async function handleAuctionStarted({
   auction.ongoing = true;
   await store.save(auction);
 
-  const chronicle = await get(store, Chronicle, "ChronicleKey");
+  const chronicle = await get(store, Chronicle, CHRONICLE_KEY);
   if (!chronicle) {
     console.error("Chronicle not defined. Exiting");
     process.exit(1);
@@ -82,7 +82,7 @@ export async function handleAuctionClosed({
 
   await store.save(auction);
 
-  const chronicle = await get(store, Chronicle, "ChronicleKey");
+  const chronicle = await get(store, Chronicle, CHRONICLE_KEY);
   if (!chronicle) {
     console.error("Chronicle not defined. Exiting");
     process.exit(1);
