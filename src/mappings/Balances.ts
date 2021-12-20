@@ -25,6 +25,8 @@ interface balanceRPCResponse {
   reserve: bigint;
 }
 
+type createAccountResponse = [Account, Balance | undefined];
+
 // Helpers for balances
 // TODO add handler for reserve repatriated
 
@@ -54,7 +56,8 @@ export async function getBalanceFromRPC(
   block: SubstrateBlock,
   accountId: string
 ): Promise<balanceRPCResponse> {
-  let api = await apiService(block.hash);
+  // taking parent hash since balance could change in the represent block
+  let api = await apiService(block.parentHash);
   if (api.query.balances.freeBalance && api.query.balances.reservedBalance) {
     const [free, reserve] = await api.queryMulti([
       [api.query.balances.freeBalance, accountId],
@@ -132,14 +135,15 @@ export async function getBalance(
     console.error(error);
     if (createIfNotFound) {
       logErrorToFile(error);
-      const balance = await getBalanceFromRPC(block, from);
-      const [, newBalance] = await createNewAccount(
-        from,
-        balance.free,
-        balance.reserve,
-        timestampToDate(block),
-        store
+      const [, newBalance] = await createAccountIfNotPresent(
+        from.toString(),
+        store,
+        block
       );
+      if (!newBalance) {
+        console.error("Error while fetching balance in getBalance");
+        process.exit(1);
+      }
       return newBalance;
     }
     process.exit(0);
@@ -152,31 +156,37 @@ export async function getBalance(
  * @param  address
  * @param store
  * @param block
- * @returns {Account}
+ * @returns {Promise<createAccountResponse>}
  */
 export const createAccountIfNotPresent = async (
   address: string,
   store: DatabaseManager,
   block: SubstrateBlock
-) => {
+): Promise<createAccountResponse> => {
   let account = await get(store, Account, address);
+  let balance: Balance | undefined;
   if (account == undefined || account == null) {
-    const balance = await getBalanceFromRPC(block, address);
-    [account] = await createNewAccount(
+    const balanceRPC = await getBalanceFromRPC(block, address);
+    [account, balance] = await createNewAccount(
       address,
-      balance.free,
-      balance.reserve,
+      balanceRPC.free,
+      balanceRPC.reserve,
       timestampToDate(block),
       store
     );
+
+    if (!balance) {
+      console.error("Error fetching balance in create account if not present");
+      process.exit(1);
+    }
   }
-  return account;
+  return [account, balance];
 };
 /**
  * Creates a new account
  * @param {string} accountId
  * @param {DatabaseManager} store
- * @returns {[Account, Balance]}
+ * @returns {createAccountResponse]}
  */
 export const createNewAccount = async (
   accountId: string,
@@ -184,7 +194,7 @@ export const createNewAccount = async (
   reserveBalance: bigint,
   timestamp: Date,
   store: DatabaseManager
-): Promise<[Account, Balance]> => {
+): Promise<createAccountResponse> => {
   if (relayChain == undefined) {
     await setAndGetRelayChain(store);
   }
@@ -294,27 +304,17 @@ export const balanceTransfer = async ({
 
   if (accountFrom == undefined) {
     console.error("Account not found ", from.toString());
-    const { free, reserve } = await getBalanceFromRPC(block, from.toString());
-    const newAccount = await createNewAccount(
+    [accountFrom] = await createAccountIfNotPresent(
       from.toString(),
-      free,
-      reserve,
-      timestampToDate(block),
-      store
+      store,
+      block
     );
-    accountFrom = newAccount[0];
     await logErrorToFile(
       `From Account ${from.toString()} not found at block ${block.height}`
     );
   }
   if (accountTo == undefined) {
-    [accountTo] = await createNewAccount(
-      to.toString(),
-      0n,
-      0n,
-      timestampToDate(block),
-      store
-    );
+    [accountTo] = await createAccountIfNotPresent(to.toString(), store, block);
   }
 
   let [balanceFrom, balanceTo] = await Promise.all([
