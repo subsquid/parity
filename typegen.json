@@ -1,0 +1,42 @@
+{
+  "outDir": "src/types",
+  "chainVersions": "kusamaVersions.json",
+  "typesBundle": "kusama",
+  "events": [
+    "registrar.Registered",
+    "registrar.Deregistered",
+
+    "balances.NewAccount",
+    "balances.Transfer",
+    "balances.Endowed",
+    "balances.DustLost",
+    "balances.Reserved",
+    "balances.Unreserved",
+    "balances.ReserveRepatriated",
+    "balances.Deposit",
+    "balances.Withdraw",
+    "balances.Slashed",
+    "balances.BalanceSet",
+
+    "auctions.AuctionStarted",
+    "auctions.AuctionClosed",
+    "auctions.WinningOffset",
+    "auctions.BidAccepted",
+    "auctions.Reserved",
+    "auctions.Unreserved",
+
+    "slots.Leased",
+    "slots.NewLeasePeriod",
+
+    "crowdloan.Created",
+    "crowdloan.Contributed",
+    "crowdloan.Dissolved",
+
+    "staking.Bonded",
+    "staking.Unbonded",
+
+    "vesting.VestingUpdated",
+    "vesting.VestingCompleted"
+  ],
+  "calls": []
+}

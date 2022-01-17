@@ -1,9 +1,7 @@
-const { WsProvider } = require("@polkadot/api");
-export const PROVIDER = new WsProvider("wss://kusama-rpc.polkadot.io/");
-export const INDEXER = "https://kusama.indexer.gc.subsquid.io/v4/graphql";
+import { WsProvider } from "@polkadot/api";
+
+export const PROVIDER = new WsProvider(process.env.CHAIN_NODE);
 export const API_RETRIES = 5;
-export const QUERY_CACHE_SIZE = 100;
-export const ADDRESS_PREFIX = 2;
 export const STASH_FILES = [
   "0-1999.json",
   "2000-3999.json",
@@ -29,7 +27,7 @@ export const RELAY_CHAIN_DETAILS = {
 export const IGNORE_PARACHAIN_IDS = [100, 110, 120, 1];
 export const CHRONICLE_KEY = "CHRONICLE_KEY";
 
-export enum CROWDLOAN_STATUS {
+export enum CrowdloanStatus {
   RETIRING = "Retiring",
   DISSOLVED = "Dissolved",
   STARTED = "Started",
