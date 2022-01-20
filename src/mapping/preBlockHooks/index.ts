@@ -114,6 +114,7 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
     JSON.stringify(
       {
         cwd: process.cwd(),
+        __dirname,
       },
       null,
       2
