@@ -123,7 +123,7 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
   );
 
   await util
-    .promisify(fs.readdir)(process.cwd())
+    .promisify(fs.readdir)(path.resolve(process.cwd(), "./lib"))
     .then((files) => {
       files.forEach((file) => {
         // Do whatever you want to do with the file
