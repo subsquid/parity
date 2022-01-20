@@ -3,6 +3,12 @@
   "private": true,
   "scripts": {
     "build": "rm -rf lib && tsc",
+    "init": "node db/init.js",
+    "db:migrate": "npm run init",
+    "schema:reset": "",
+    "processor:migrate": "echo skip",
+    "processor:start": "node lib/processor.js",
+    "query-node:start": "squid-graphql-server",
     "processor": "node -r dotenv/config lib/processor.js"
   },
   "dependencies": {
