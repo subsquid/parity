@@ -4,6 +4,7 @@
 import { BlockHandler } from "@subsquid/substrate-processor";
 import * as fs from "fs";
 import * as path from "path";
+import * as util from "util";
 import { Chains, Token } from "../../model";
 import {
   NATIVE_TOKEN_DETAILS,
@@ -120,6 +121,17 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
       2
     )
   );
+
+  await util
+    .promisify(fs.readdir)(process.cwd())
+    .then((files) => {
+      files.forEach((file) => {
+        // Do whatever you want to do with the file
+        console.log(file);
+      });
+    });
+
+  // throw new Error("de fack u ar!");
 
   const timestampJSON = JSON.parse(
     fs.readFileSync(
