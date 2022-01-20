@@ -110,18 +110,6 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
   console.log("Initializing Indexer with defaults completed");
   console.log("Starting to take up initial bootstrap");
 
-  console.log(
-    "KRI;debug;",
-    JSON.stringify(
-      {
-        cwd: process.cwd(),
-        __dirname,
-      },
-      null,
-      2
-    )
-  );
-
   await util
     .promisify(fs.readdir)(path.resolve(process.cwd(), "./lib"))
     .then((files) => {
@@ -130,8 +118,6 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
         console.log(file);
       });
     });
-
-  // throw new Error("de fack u ar!");
 
   const timestampJSON = JSON.parse(
     fs.readFileSync(
