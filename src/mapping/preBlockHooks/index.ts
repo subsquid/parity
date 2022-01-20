@@ -109,6 +109,17 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
   console.log("Initializing Indexer with defaults completed");
   console.log("Starting to take up initial bootstrap");
 
+  console.log(
+    "KRI;debug;",
+    JSON.stringify(
+      {
+        cwd: process.cwd(),
+      },
+      null,
+      2
+    )
+  );
+
   const timestampJSON = JSON.parse(
     fs.readFileSync(
       path.resolve(`${__dirname}/../../../blocksStash/timestamp.json`),
