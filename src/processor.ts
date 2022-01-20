@@ -7,6 +7,7 @@ import { addSlotsEventsHandlers } from "./mapping/Slots";
 import { addStakingEventHandlers } from "./mapping/Staking";
 import { addVestingEventHandlers } from "./mapping/Vesting";
 import { loadGenesisData } from "./mapping/preBlockHooks";
+import { CHAIN_NODE, INDEXER_ENDPOINT_URL } from "./constants";
 
 const processor = new SubstrateProcessor("kusama_balances");
 
@@ -14,8 +15,8 @@ processor.setTypesBundle("kusama");
 processor.setBatchSize(500);
 
 processor.setDataSource({
-  archive: process.env.INDEXER_ENDPOINT_URL as string,
-  chain: process.env.CHAIN_NODE as string,
+  archive: INDEXER_ENDPOINT_URL,
+  chain: CHAIN_NODE,
 });
 
 // processor.setBlockRange({ from: 7796877 });

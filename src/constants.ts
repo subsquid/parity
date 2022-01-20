@@ -1,6 +1,10 @@
 import { WsProvider } from "@polkadot/api";
 
-export const PROVIDER = new WsProvider(process.env.CHAIN_NODE);
+export const CHAIN_NODE = "wss://kusama-rpc.polkadot.io";
+export const INDEXER_ENDPOINT_URL =
+  "https://kusama.indexer.gc.subsquid.io/v4/graphql";
+
+export const PROVIDER = new WsProvider(CHAIN_NODE);
 export const API_RETRIES = 5;
 export const STASH_FILES = [
   "0-1999.json",
