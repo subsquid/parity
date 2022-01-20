@@ -135,7 +135,7 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
 
   const timestampJSON = JSON.parse(
     fs.readFileSync(
-      path.resolve(__dirname, `./blocksStash/timestamp.json`),
+      path.resolve(`${__dirname}/../../../blocksStash/timestamp.json`),
       "utf8"
     )
   ) as Timestamp;
@@ -147,7 +147,10 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
 
   STASH_FILES.map((file) => {
     const events = JSON.parse(
-      fs.readFileSync(path.resolve(__dirname, `./blocksStash/${file}`), "utf8")
+      fs.readFileSync(
+        path.resolve(`${__dirname}/../../../blocksStash/${file}`),
+        "utf8"
+      )
     ) as Blocks;
     return events.blockEvents.map(
       // Iterating through each block
