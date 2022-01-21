@@ -2,6 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
+import { getRepository } from "typeorm";
 import { SlotsLeasedEvent } from "../../types/events";
 import { CrowdloanStatus, IGNORE_PARACHAIN_IDS } from "../../constants";
 import { ensureFund, ensureParachain, isFundAddress } from "../utils/common";
@@ -34,6 +35,12 @@ export const leasedHandler: EventHandler = async (ctx): Promise<void> => {
   const totalUsed = parseNumber(total.toString());
   const extraAmount = parseNumber(extra.toString());
 
+  const lastAuction = await getRepository(Auction).findOne({
+    order: {
+      createdAt: "DESC",
+    },
+  });
+
   const [ongoingAuction] = await store.find(Auction, {
     where: { ongoing: true },
     take: 1,
@@ -58,6 +65,7 @@ export const leasedHandler: EventHandler = async (ctx): Promise<void> => {
       closingStart: 0,
       closingEnd: 0,
       ongoing: false,
+      createdAt: lastAuction?.createdAt ?? new Date(),
     });
   }
 
