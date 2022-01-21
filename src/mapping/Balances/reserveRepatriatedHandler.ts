@@ -38,6 +38,10 @@ const getEvent = (ctx: EventHandlerContext): EventType => {
   const event = new BalancesReserveRepatriatedEvent(ctx);
   if (event.asV2008) {
     const [from, to, amount, destinationStatus] = event.asV2008;
+    console.log(
+      "KRI;asV2008",
+      JSON.stringify({ from, to, amount, destinationStatus })
+    );
     return {
       from: toKusamaFormat(from),
       to: toKusamaFormat(to),
@@ -45,7 +49,11 @@ const getEvent = (ctx: EventHandlerContext): EventType => {
       destinationStatus,
     };
   }
-  const { from, to, amount, destinationStatus } = event.asV2008;
+  const { from, to, amount, destinationStatus } = event.asLatest;
+  console.log(
+    "KRI;asLatest",
+    JSON.stringify({ from, to, amount, destinationStatus })
+  );
   return {
     from: toKusamaFormat(from),
     to: toKusamaFormat(to),
