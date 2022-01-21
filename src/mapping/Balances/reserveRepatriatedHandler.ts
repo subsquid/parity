@@ -34,6 +34,7 @@ export const reserveRepatriatedHandler: EventHandler = async (
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {
+  console.log("KRI;reserveRepatriatedHandler", JSON.stringify(ctx));
   const event = new BalancesReserveRepatriatedEvent(ctx);
   if (event.asV2008) {
     const [from, to, amount, destinationStatus] = event.asV2008;
