@@ -23,6 +23,7 @@ export interface CrowdloanReturn {
   firstPeriod: number;
   lastPeriod: number;
   trieIndex: number;
+  createdAt: Date;
 }
 
 export type CrowdloanUpdater = keyof Crowdloan;

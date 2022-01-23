@@ -19,7 +19,7 @@ processor.setDataSource({
   chain: CHAIN_NODE,
 });
 
-// processor.setBlockRange({ from: 7796877 });
+// processor.setBlockRange({ from: 7828269 });
 
 addAuctionEventsHandlers(processor);
 addBalancesEventHandlers(processor);

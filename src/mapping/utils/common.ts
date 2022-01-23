@@ -392,9 +392,14 @@ const fetchCrowdloan = async (
 ): Promise<CrowdloanReturn | null> => {
   const api = await apiService(block.hash);
   // Data may get pruned, so need to specify block hash
-  const fund = await api.query.crowdloan.funds(paraId);
+  const fund = (await api.query.crowdloan.funds(paraId)).toJSON();
 
-  return fund.toJSON() as unknown as CrowdloanReturn | null;
+
+  return fund ? {
+    ...fund as object,
+    // todo; Lear how to get this info properly
+    createdAt: new Date(block.timestamp)
+  } as CrowdloanReturn : fund as null
 };
 
 export const ensureFund = async (
