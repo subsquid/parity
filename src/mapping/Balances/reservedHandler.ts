@@ -3,27 +3,17 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { BalancesReservedEvent } from "../../types/events";
-import { getBalance } from "../utils/common";
-import { toKusamaFormat } from "../utils/utils";
+import { AccountAddress } from "../../customTypes";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { storeAccountAndUpdateBalances } from "../../useCases";
 
-type EventType = { who: string; amount: bigint };
+type EventType = { who: AccountAddress; amount: bigint };
 
 export const reservedHandler: EventHandler = async (ctx): Promise<void> => {
   const { block, store } = ctx;
-  const { who: from, amount } = getEvent(ctx);
+  const { who } = getEvent(ctx);
 
-  const balance = await getBalance(
-    from,
-    "Balances Reserved",
-    store,
-    block,
-    true
-  );
-
-  balance.bondedBalance = (balance.bondedBalance || 0n) + amount;
-  balance.freeBalance = (balance.freeBalance || 0n) - amount;
-
-  await store.save(balance);
+  await storeAccountAndUpdateBalances(store, block, [who]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

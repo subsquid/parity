@@ -10,8 +10,5 @@ export class Token {
   id!: string
 
   @Column_("text", {nullable: false})
-  tokenSymbol!: string
-
-  @Column_("text", {nullable: false})
-  tokenName!: string
+  name!: string
 }

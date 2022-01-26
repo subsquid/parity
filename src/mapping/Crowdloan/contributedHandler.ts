@@ -3,51 +3,45 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { CrowdloanContributedEvent } from "../../types/events";
-import { Contribution, Crowdloan } from "../../model";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { AccountAddress } from "../../customTypes";
 import {
-  createAccountIfNotPresent,
+  createOrUpdateContribution,
   ensureFund,
-  ensureParachain,
-} from "../utils/common";
-import { convertAddressToSubstrate, get, toKusamaFormat } from "../utils/utils";
+  getCrowdloan,
+  storeAccountAndUpdateBalances,
+} from "../../useCases";
 
-type EventType = { who: string; fundIndex: number; amount: bigint };
+type EventType = { who: AccountAddress; fundIndex: number; amount: bigint };
 
 export const contributedHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block, event } = ctx;
-  const { who: contributorId, fundIndex: fundIdx, amount } = getEvent(ctx);
+  const { who, fundIndex: fundIdx, amount } = getEvent(ctx);
 
-  const blockNum = block.height;
-
-  const parachain = await ensureParachain(fundIdx, store, block);
-
+  // todo; KRI; Verify this approach
   const fund = await ensureFund(fundIdx, store, block);
-  const fundId = fund.id;
 
-  const [contributor] = await createAccountIfNotPresent(
-    convertAddressToSubstrate(contributorId),
-    store,
-    block
-  );
+  const [contributor] = await storeAccountAndUpdateBalances(store, block, [
+    who,
+  ]);
+
   if (!contributor) {
-    console.error("Contributor not found", contributorId);
+    console.error("Contributor not found");
     process.exit(0);
   }
+
   // const parachain = fund.parachain
-  const crowdLoan = await get(store, Crowdloan, fundId);
-  if (crowdLoan) {
-    const contribution = new Contribution({
-      id: `${blockNum}-${event.id}`,
-      crowdloanId: crowdLoan.id,
+  const crowdloan = await getCrowdloan(store, fund.id);
+
+  if (crowdloan) {
+    await createOrUpdateContribution(store, {
+      id: `${block.height}-${event.id}`,
+      crowdloan,
       account: contributor,
-      parachain,
-      fund: crowdLoan,
+      withdrawal: false,
       amount,
       timestamp: new Date(block.timestamp),
-      blockNum,
     });
-
-    await store.save(contribution);
   }
 };
 

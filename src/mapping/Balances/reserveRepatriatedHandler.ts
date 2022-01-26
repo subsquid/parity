@@ -4,9 +4,8 @@ import {
 } from "@subsquid/substrate-processor";
 import { BalancesReserveRepatriatedEvent } from "../../types/events";
 import * as v9130 from "../../types/v9130";
-import { BalanceStatus_Reserved } from "../../types/v9130";
-import { accountBalanceTransfer } from "../utils/common";
-import { toKusamaFormat } from "../utils/utils";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { storeAccountAndUpdateBalances } from "../../useCases";
 
 type EventType = {
   from: string;
@@ -18,19 +17,10 @@ type EventType = {
 export const reserveRepatriatedHandler: EventHandler = async (
   ctx
 ): Promise<void> => {
-  const { extrinsic, block, store } = ctx;
-  const { from, to, amount, destinationStatus } = getEvent(ctx);
-  await accountBalanceTransfer(
-    from,
-    to,
-    amount,
-    true,
-    // todo; Check it; because in v4 it was just without '__kind' property
-    isReserved(destinationStatus),
-    extrinsic,
-    store,
-    block
-  );
+  const { block, store } = ctx;
+  const { from, to } = getEvent(ctx);
+
+  await storeAccountAndUpdateBalances(store, block, [from, to]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {
@@ -51,10 +41,4 @@ const getEvent = (ctx: EventHandlerContext): EventType => {
     amount,
     destinationStatus,
   };
-};
-
-const isReserved = (
-  destinationStatus: v9130.BalanceStatus
-): destinationStatus is BalanceStatus_Reserved => {
-  return destinationStatus.__kind === "Reserved";
 };

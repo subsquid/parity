@@ -5,14 +5,12 @@ import { BlockHandler } from "@subsquid/substrate-processor";
 import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
-import { Chains, Token } from "../../model";
+import { STASH_FILES } from "../../constants";
 import {
-  NATIVE_TOKEN_DETAILS,
-  RELAY_CHAIN_DETAILS,
-  STASH_FILES,
-} from "../../constants";
-import { createNewAccount } from "../utils/common";
-import { convertAddressToSubstrate } from "../utils/utils";
+  createOrUpdateKusamaAccount,
+  initializeKusamaChain,
+} from "../../useCases";
+import { convertAddressToSubstrate } from "../../utils/addressConvertor";
 
 interface Blocks {
   blockEvents: BlockEvent[];
@@ -86,27 +84,6 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
 
   const { store } = ctx;
   console.log("Initializing Indexer with defaults");
-
-  const nativeToken = new Token({
-    id: NATIVE_TOKEN_DETAILS.id,
-    tokenName: NATIVE_TOKEN_DETAILS.tokenName,
-    tokenSymbol: NATIVE_TOKEN_DETAILS.tokenSymbol,
-  });
-
-  await store.save(nativeToken);
-
-  const relayChain = new Chains({
-    id: RELAY_CHAIN_DETAILS.id,
-    nativeToken,
-    chainName: RELAY_CHAIN_DETAILS.chainName,
-    relayId: RELAY_CHAIN_DETAILS.id,
-    relayChain: RELAY_CHAIN_DETAILS.relayChain,
-    creationBlock: 0,
-    deregistered: false,
-    deposit: 0n,
-  });
-
-  await store.save(relayChain);
   console.log("Initializing Indexer with defaults completed");
   console.log("Starting to take up initial bootstrap");
 
@@ -163,14 +140,14 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
       }
     );
   });
+
+  await initializeKusamaChain(store);
+
   await Promise.all(
-    newAccountData.map(async ({ address, timestamp, freeBalance }) => {
-      await createNewAccount(
-        convertAddressToSubstrate(address),
-        freeBalance,
-        0n,
-        timestamp,
-        store
+    newAccountData.map(async ({ address }) => {
+      await createOrUpdateKusamaAccount(
+        store,
+        convertAddressToSubstrate(address)
       );
     })
   );

@@ -1,4 +1,4 @@
-import { Account, Crowdloan } from "../../model";
+import { Account } from "../model";
 
 type HexNumber = string;
 
@@ -25,5 +25,3 @@ export interface CrowdloanReturn {
   trieIndex: number;
   createdAt: Date;
 }
-
-export type CrowdloanUpdater = keyof Crowdloan;

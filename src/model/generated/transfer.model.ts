@@ -4,8 +4,8 @@ import {Account} from "./account.model"
 import {Token} from "./token.model"
 
 @Entity_()
-export class Transfers {
-  constructor(props?: Partial<Transfers>) {
+export class Transfer {
+  constructor(props?: Partial<Transfer>) {
     Object.assign(this, props)
   }
 
@@ -22,7 +22,7 @@ export class Transfers {
 
   @Index_()
   @ManyToOne_(() => Token, {nullable: false})
-  tokenId!: Token
+  token!: Token
 
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
   amount!: bigint

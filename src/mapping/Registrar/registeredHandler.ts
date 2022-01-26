@@ -3,44 +3,30 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { RegistrarRegisteredEvent } from "../../types/events";
-import { Chains } from "../../model";
-import { RELAY_CHAIN_DETAILS } from "../../constants";
-import { apiService } from "../utils/api";
-import { createAccountIfNotPresent } from "../utils/common";
-import { toKusamaFormat } from "../utils/utils";
+import { AccountAddress } from "../../customTypes";
+import {
+  createOrUpdateChain,
+  getKusamaChainId,
+  storeAccountAndUpdateBalances,
+} from "../../useCases";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { timestampToDate } from "../../utils/common";
 
-type EventType = { paraId: number; managerId: string };
+type EventType = { paraId: number; managerId: AccountAddress };
 
 export const registeredHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block } = ctx;
   const { paraId, managerId } = getEvent(ctx);
 
-  const parachain = new Chains({
-    id: `${paraId}-${managerId}`,
-    paraId,
+  await createOrUpdateChain(store, {
+    id: `${paraId}`,
+    name: `${paraId}-${managerId}`,
     relayChain: false,
-    relayId: RELAY_CHAIN_DETAILS.id,
+    relayId: await getKusamaChainId(store),
+    registeredAt: timestampToDate(block),
   });
 
-  const [managerAccount] = await createAccountIfNotPresent(
-    managerId,
-    store,
-    block
-  );
-
-  const api = await apiService(block.hash);
-  const { deposit } = ((await api.query.registrar.paras(paraId)).toJSON() || {
-    deposit: 0n,
-  }) as { deposit?: bigint };
-
-  parachain.createdAt = new Date(block.timestamp);
-  parachain.manager = managerAccount;
-  parachain.deposit = deposit;
-  parachain.creationBlock = block.height;
-  parachain.deregistered = false;
-  parachain.relayChain = false;
-
-  await store.save(parachain);
+  await storeAccountAndUpdateBalances(store, block, [managerId]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

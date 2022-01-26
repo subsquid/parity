@@ -35,7 +35,7 @@
     "@typescript-eslint/no-use-before-define": "off"
   },
   "ignorePatterns": [
-    "src/model",
+    "src/model/generated",
     "src/types",
     "src/mapping/utils/common.ts",
     "src/mapping/utils/utils.ts"

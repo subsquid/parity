@@ -14,21 +14,30 @@ export class Balance {
 
   @Index_()
   @ManyToOne_(() => Account, {nullable: false})
-  accountId!: Account
+  account!: Account
 
   @Index_()
   @ManyToOne_(() => Token, {nullable: false})
-  tokenId!: Token
+  token!: Token
 
-  @Column_("timestamp with time zone", {nullable: false})
-  timestamp!: Date
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
+  reservedBalance!: bigint | undefined | null
 
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
   freeBalance!: bigint | undefined | null
+
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
+  lockedBalance!: bigint | undefined | null
 
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
   bondedBalance!: bigint | undefined | null
 
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
   vestedBalance!: bigint | undefined | null
+
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
+  democracyBalance!: bigint | undefined | null
+
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
+  electionBalance!: bigint | undefined | null
 }

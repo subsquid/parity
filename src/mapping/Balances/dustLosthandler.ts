@@ -3,28 +3,17 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { BalancesDustLostEvent } from "../../types/events";
-import { getBalance } from "../utils/common";
-import { toKusamaFormat } from "../utils/utils";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { AccountAddress } from "../../customTypes";
+import { storeAccountAndUpdateBalances } from "../../useCases";
 
-type EventType = { account: string; amount: bigint };
+type EventType = { account: AccountAddress; amount: bigint };
 
 export const dustLostHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block } = ctx;
-  const { account: from } = getEvent(ctx);
+  const { account } = getEvent(ctx);
 
-  const balance = await getBalance(
-    from,
-    "Balances DustLost",
-    store,
-    block,
-    true
-  );
-
-  balance.bondedBalance = 0n;
-  balance.vestedBalance = 0n;
-  balance.freeBalance = 0n;
-
-  await store.save(balance);
+  await storeAccountAndUpdateBalances(store, block, [account]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

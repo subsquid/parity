@@ -3,10 +3,11 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { VestingVestingCompletedEvent } from "../../types/events";
-import { getBalance } from "../utils/common";
-import { toKusamaFormat } from "../utils/utils";
+import { AccountAddress } from "../../customTypes";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { storeAccountAndUpdateBalances } from "../../useCases";
 
-type EventType = { account: string };
+type EventType = { account: AccountAddress };
 
 export const vestingCompletedHandler: EventHandler = async (
   ctx
@@ -14,15 +15,7 @@ export const vestingCompletedHandler: EventHandler = async (
   const { store, block } = ctx;
   const { account } = getEvent(ctx);
 
-  const balance = await getBalance(
-    account,
-    "Vesting Completed",
-    store,
-    block,
-    true
-  );
-  balance.vestedBalance = 0n;
-  await store.save(balance);
+  await storeAccountAndUpdateBalances(store, block, [account]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

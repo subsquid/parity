@@ -3,27 +3,19 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { VestingVestingUpdatedEvent } from "../../types/events";
-import { getBalance } from "../utils/common";
-import { toKusamaFormat } from "../utils/utils";
+import { AccountAddress } from "../../customTypes";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { storeAccountAndUpdateBalances } from "../../useCases";
 
-type EventType = { account: string; unvested: bigint };
+type EventType = { account: AccountAddress; unvested: bigint };
 
 export const vestingUpdatedHandler: EventHandler = async (
   ctx
 ): Promise<void> => {
   const { store, block } = ctx;
-  const { account, unvested: vestingBalance } = getEvent(ctx);
+  const { account } = getEvent(ctx);
 
-  const address = account.toString();
-  const balance = await getBalance(
-    address,
-    "Vesting Updated",
-    store,
-    block,
-    true
-  );
-  balance.vestedBalance = vestingBalance;
-  await store.save(balance);
+  await storeAccountAndUpdateBalances(store, block, [account]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

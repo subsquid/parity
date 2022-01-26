@@ -2,43 +2,41 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
+import { v4 } from "uuid";
 import { BalancesTransferEvent } from "../../types/events";
-import { Transfers } from "../../model";
-import { accountBalanceTransfer } from "../utils/common";
-import { timestampToDate, toKusamaFormat } from "../utils/utils";
-import { NativeToken } from "../utils/nativeToken";
+import {
+  createOrUpdateTransfer,
+  getKusamaToken,
+  storeAccountAndUpdateBalances,
+} from "../../useCases";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { AccountAddress } from "../../customTypes";
+import { timestampToDate } from "../../utils/common";
 
-type TransferEvent = { from: string; to: string; amount: bigint };
+type TransferEvent = {
+  from: AccountAddress;
+  to: AccountAddress;
+  amount: bigint;
+};
 
 export const transferHandler: EventHandler = async (ctx) => {
-  const { extrinsic, store, block, event } = ctx;
+  const { store, block } = ctx;
   const { from, to, amount } = getTransferEvent(ctx);
 
-  const [accountFrom, accountTo] = await accountBalanceTransfer(
-    from,
-    to,
-    amount,
-    false,
-    false,
-    extrinsic,
+  const [accountFrom, accountTo] = await storeAccountAndUpdateBalances(
     store,
-    block
+    block,
+    [from, to]
   );
 
-  if (!NativeToken.token) {
-    await NativeToken.setAndGetTokenDetails(store);
-  }
-
-  const transfer = new Transfers({
-    id: event.id,
+  await createOrUpdateTransfer(store, {
+    id: v4().toString(),
     senderAccount: accountFrom,
     receiverAccount: accountTo,
-    tokenId: NativeToken.token, // will have to change once fix is up
+    token: await getKusamaToken(store),
     amount,
     timestamp: timestampToDate(block),
   });
-
-  await store.save(transfer);
 };
 
 const getTransferEvent = (ctx: EventHandlerContext): TransferEvent => {

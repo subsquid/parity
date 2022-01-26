@@ -1,4 +1,4 @@
-process: migrate
+process: build
 	@node -r dotenv/config lib/processor.js
 
 
@@ -6,11 +6,11 @@ serve:
 	@npx squid-graphql-server
 
 
-migrate:
+migrate: build
 	@npx sqd db:migrate
 
 
-migration:
+migration: build
 	@npx sqd db:create-migration Data
 
 

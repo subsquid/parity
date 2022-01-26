@@ -3,22 +3,19 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { RegistrarDeregisteredEvent } from "../../types/events";
-import { Chains } from "../../model";
-import { get } from "../utils/utils";
+import { createOrUpdateChain } from "../../useCases";
+import { timestampToDate } from "../../utils/common";
 
 type EventType = { paraId: number };
 
 export const deregisteredHandler: EventHandler = async (ctx): Promise<void> => {
-  const { store } = ctx;
+  const { store, block } = ctx;
   const { paraId } = getEvent(ctx);
 
-  const chain = await get(store, Chains, "", { paraId });
-  if (chain === undefined || chain === null) {
-    console.log("Chain not found with paraId ", paraId);
-    return;
-  }
-  chain.deregistered = true;
-  await store.save(chain);
+  await createOrUpdateChain(store, {
+    id: `${paraId}`,
+    deregisteredAt: timestampToDate(block),
+  });
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

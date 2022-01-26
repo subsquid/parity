@@ -3,29 +3,17 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { BalancesBalanceSetEvent } from "../../types/events";
-import { getBalance } from "../utils/common";
-import { cacheNewAccountEvents } from "../utils/cacheNewAccountEvents";
-import { toKusamaFormat } from "../utils/utils";
+import { AccountAddress } from "../../customTypes";
+import { toKusamaFormat } from "../../utils/addressConvertor";
+import { storeAccountAndUpdateBalances } from "../../useCases";
 
-type BalanceSetEvent = { who: string; free: bigint; reserved: bigint };
+type BalanceSetEvent = { who: AccountAddress; free: bigint; reserved: bigint };
 
 export const balanceSetHandler: EventHandler = async (ctx) => {
-  const { store, block, extrinsic } = ctx;
+  const { store, block } = ctx;
+  const { who } = getEvent(ctx);
 
-  const { who: to, free: balance } = getEvent(ctx);
-  const blockNumber = block.height;
-
-  const newAccountEvent = cacheNewAccountEvents[blockNumber]?.[to];
-
-  if (newAccountEvent?.extrinsicId === extrinsic?.id) {
-    // already processed in new account, skipping
-    return;
-  }
-
-  const balanceTo = await getBalance(to, "Balance Set Event", store, block);
-
-  balanceTo.freeBalance = (balanceTo.freeBalance || 0n) + balance;
-  await store.save(balanceTo);
+  await storeAccountAndUpdateBalances(store, block, [who]);
 };
 
 const getEvent = (ctx: EventHandlerContext): BalanceSetEvent => {
