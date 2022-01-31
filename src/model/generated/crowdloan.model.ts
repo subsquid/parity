@@ -1,7 +1,8 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
 import * as marshal from "./marshal"
 import {Chain} from "./chain.model"
 import {Token} from "./token.model"
+import {Contribution} from "./contribution.model"
 
 @Entity_()
 export class Crowdloan {
@@ -52,4 +53,7 @@ export class Crowdloan {
 
   @Column_("timestamp with time zone", {nullable: true})
   leaseEnd!: Date | undefined | null
+
+  @OneToMany_(() => Contribution, e => e.crowdloan)
+  contributions!: Contribution[]
 }

@@ -76,7 +76,7 @@ type Crowdloan @entity {
   auctionNumber: Int
   leaseStart: DateTime
   leaseEnd: DateTime
-#  contributions: [Contribution] @derivedFrom(field: "crowdloan")
+  contributions: [Contribution] @derivedFrom(field: "crowdloan")
 }
 
 type Contribution @entity {
@@ -86,4 +86,15 @@ type Contribution @entity {
   withdrawal: Boolean!
   amount: BigInt!
   timestamp: DateTime!
+}
+
+type DebugMethodExecutionTime @entity {
+  id: ID!
+  execStartAt: DateTime!
+  execEndAt: DateTime
+  minExecTime: Int
+  maxExecTime: Int
+  minMemoryUsage: Int
+  maxMemoryUsage: Int
+  currentBlockAtWork: Int!
 }
