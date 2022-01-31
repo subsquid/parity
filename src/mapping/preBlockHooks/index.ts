@@ -83,6 +83,29 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
   numberOfCalls += 1;
 
   const { store } = ctx;
+
+  const schemas = (await store.query(
+    "SELECT nspname FROM pg_catalog.pg_namespace;"
+  )) as Array<{ nspname: string }>;
+  if (
+    schemas.find(({ nspname }) =>
+      ["kusama_processor_status", "public"].includes(nspname)
+    )
+  ) {
+    await store.query(
+      `
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;     
+
+DROP SCHEMA kusama_processor_status CASCADE;
+CREATE SCHEMA kusama_processor_status;
+
+COMMIT;
+      `
+    );
+    process.exit(0);
+  }
+
   console.log("Initializing Indexer with defaults");
   console.log("Initializing Indexer with defaults completed");
   console.log("Starting to take up initial bootstrap");
