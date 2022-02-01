@@ -3,7 +3,7 @@ import { DeepPartial } from "typeorm";
 import { DebugMethodExecutionTime } from "../model";
 import { findById } from "./common";
 
-const DB_IO_BLOCK_PERIOD = 1000;
+const DB_IO_BLOCK_PERIOD = 10;
 let lastBlockInMemory = 0;
 const shouldCallDB = (currentBlockAtWork: number) => {
   if (currentBlockAtWork - lastBlockInMemory > DB_IO_BLOCK_PERIOD) {
