@@ -1,5 +1,5 @@
 import { Store } from "@subsquid/substrate-processor";
-import { DeepPartial, IsNull, Not } from "typeorm";
+import { DeepPartial, In, IsNull, Not } from "typeorm";
 import { CachedAccount } from "../model";
 import { deleteMany, findMany, upsert } from "./common";
 
@@ -8,11 +8,21 @@ export const createOrUpdateCachedAccount = (
   data: DeepPartial<CachedAccount>
 ): Promise<CachedAccount> => upsert(store, CachedAccount, data);
 
-export const getAllCachedAccounts = (store: Store): Promise<CachedAccount[]> =>
-  findMany(store, CachedAccount, { relations: ["account"] });
+export const getAllCachedAccounts = (
+  store: Store,
+  take: number
+): Promise<CachedAccount[]> =>
+  findMany(store, CachedAccount, { relations: ["account"], take });
 
 export const pruneAllCachedAccounts = async (store: Store): Promise<void> => {
   // todo: check it
   // there may be easier solution, like using repository.clear()
   await deleteMany(store, CachedAccount, { accountId: Not(IsNull()) });
+};
+
+export const deleteCachesAccounts = async (
+  store: Store,
+  accountIds: string[]
+): Promise<void> => {
+  await deleteMany(store, CachedAccount, { accountId: In(accountIds) });
 };

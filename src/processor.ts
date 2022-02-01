@@ -8,7 +8,11 @@ import { addRegistrarEventsHandlers } from "./mapping/Registrar";
 import { addStakingEventHandlers } from "./mapping/Staking";
 import { addVestingEventHandlers } from "./mapping/Vesting";
 import { loadGenesisData } from "./mapping/preBlockHooks";
-import { CHAIN_NODE, INDEXER_ENDPOINT_URL } from "./constants";
+import {
+  CHAIN_NODE,
+  INDEXER_ENDPOINT_URL,
+  START_FROM_BLOCK,
+} from "./constants";
 import {
   logMethodExecutionEnd,
   logMethodExecutionStart,
@@ -24,7 +28,7 @@ processor.setDataSource({
   chain: CHAIN_NODE,
 });
 
-// processor.setBlockRange({ from: 5000000 });
+processor.setBlockRange({ from: START_FROM_BLOCK });
 
 const patchProcessor = (substrateProcessor: SubstrateProcessor) => {
   const oldAddEventHandler =

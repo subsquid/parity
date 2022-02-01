@@ -6,10 +6,11 @@ import { Account, Balance } from "../model";
 import { findByCriteria, findById, upsert } from "./common";
 import {
   checkRpcAvailability,
-  getLockedBalances,
-  getSystemAccountInfo,
+  getAccountLockedBalances,
+  getSystemAccountInfos,
 } from "../services/apiCalls";
 import {
+  BALANCES_RPC_CALL_BLOCK_CHUNK_SIZE,
   BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET,
   BALANCES_RPC_CALL_BLOCK_TIMESTAMP_OFFSET,
   LockId,
@@ -18,8 +19,8 @@ import {
 import { AccountAddress } from "../customTypes";
 import {
   createOrUpdateCachedAccount,
+  deleteCachesAccounts,
   getAllCachedAccounts,
-  pruneAllCachedAccounts,
 } from "./cachedAccount";
 import {
   createOrUpdateFirstOfRpcBatchBlock,
@@ -31,6 +32,10 @@ import { getKusamaToken } from "./token";
 import { createOrUpdateHistoricalBalance } from "./historicalBalance";
 import { convertAddressToSubstrate } from "../utils/addressConvertor";
 import { getKusamaChain } from "./chain";
+import {
+  logMethodExecutionEnd,
+  logMethodExecutionStart,
+} from "./debugMethodExecutionTime";
 
 export const getBalance = (
   store: Store,
@@ -90,12 +95,21 @@ export const storeAccountAndUpdateBalances = async (
     block.timestamp - firstOfRpcBatchBlock.timestamp.valueOf() >=
       BALANCES_RPC_CALL_BLOCK_TIMESTAMP_OFFSET
   ) {
-    const cachedAccounts = await getAllCachedAccounts(store);
-    const accountsForUpdate = cachedAccounts.map(({ account }) => account);
+    await logMethodExecutionStart(
+      store,
+      block,
+      "storeAccountAndUpdateBalances"
+    );
+    const usageBefore = process.memoryUsage().heapUsed;
+    const cachedAccounts = await getAllCachedAccounts(
+      store,
+      BALANCES_RPC_CALL_BLOCK_CHUNK_SIZE
+    );
 
+    const cashedAccountIds = cachedAccounts.map(({ accountId }) => accountId);
     try {
       const accountDataCollection = await getAccountData(
-        accountsForUpdate.map(({ id }) => id),
+        cashedAccountIds,
         block
       );
 
@@ -104,9 +118,9 @@ export const storeAccountAndUpdateBalances = async (
       await Promise.all(
         Object.entries(accountDataCollection).map(
           async ([accountId, accountBalances]) => {
-            const account = accountsForUpdate.find(
-              ({ id }) => accountId === id
-            );
+            const account = cachedAccounts.find(
+              ({ accountId: id }) => accountId === id
+            )?.account;
             if (!account) {
               return;
             }
@@ -143,11 +157,21 @@ export const storeAccountAndUpdateBalances = async (
       // adjust first block on current
       await createOrUpdateFirstOfRpcBatchBlock(store, block);
       // remove all cached, since they all already processed
-      await pruneAllCachedAccounts(store);
+      // await pruneAllCachedAccounts(store);
+      await deleteCachesAccounts(store, cashedAccountIds);
     } catch (error) {
       // if faced an error - postpone processing on BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET blocks
       await createOrUpdateFirstOfRpcBatchBlock(store, block);
     }
+
+    const usageAfter = process.memoryUsage().heapUsed;
+
+    await logMethodExecutionEnd(
+      store,
+      "storeAccountAndUpdateBalances",
+      block,
+      usageAfter - usageBefore
+    );
   }
   return accounts;
 };
@@ -208,21 +232,14 @@ export const storeAccountAndUpdateBalances = async (
  * locked_balance = the type of lock with the highest amount locked.
  *
  * **note this account has no funds vesting so it doesn’t show up in the above response
- * @param accountAddressed
+ * @param accountAddresses
  * @param block
  * @returns {Promise<void>}
  */
 export const getAccountData = async (
-  accountAddressed: string[],
+  accountAddresses: string[],
   block: SubstrateBlock
 ): Promise<Record<string, AccountBalances>> => {
-  // prepare data structure
-  const accountMap = accountAddressed.reduce((acc, accountAddress) => {
-    return {
-      ...acc,
-      [accountAddress]: {},
-    };
-  }, {} as Record<string, { systemAccountData?: SystemAccountData; lockedBalancesData?: Array<LockedBalancesData> }>);
   // check rpc function availability
   if (
     !checkRpcAvailability({ block }, RpcFunction.systemAccountInfo) ||
@@ -232,20 +249,19 @@ export const getAccountData = async (
   }
 
   // get data and assign it to the corresponding account at the same time
-  await Promise.all(
-    accountAddressed.map(async (accountAddress) => {
-      accountMap[accountAddress] = {
-        systemAccountData: await getSystemAccountInfo(accountAddress, block),
-      };
-    })
-  );
-  await Promise.all(
-    accountAddressed.map(async (accountAddress) => {
-      accountMap[accountAddress] = {
-        lockedBalancesData: await getLockedBalances(accountAddress, block),
-      };
-    })
-  );
+  const infos = await getSystemAccountInfos(accountAddresses, block);
+  const locks = await getAccountLockedBalances(accountAddresses, block);
+
+  // prepare data structure
+  const accountMap = accountAddresses.reduce((acc, accountAddress) => {
+    return {
+      ...acc,
+      [accountAddress]: {
+        systemAccountData: infos[accountAddress],
+        lockedBalancesData: locks[accountAddress],
+      },
+    };
+  }, {} as Record<string, { systemAccountData?: SystemAccountData; lockedBalancesData?: Array<LockedBalancesData> }>);
 
   // calculate balances
   return Object.entries(accountMap).reduce(

@@ -1,6 +1,8 @@
 import { WsProvider } from "@polkadot/api";
 
-export const CHAIN_NODE = "wss://kusama-rpc.polkadot.io";
+// export const CHAIN_NODE = "wss://kusama-rpc.polkadot.io";
+export const CHAIN_NODE =
+  "wss://rpc.pinknode.io/kusama/7d28e241-bcc4-4708-8919-405a50b578ca";
 export const INDEXER_ENDPOINT_URL =
   "https://kusama.indexer.gc.subsquid.io/v4/graphql";
 
@@ -43,10 +45,13 @@ export enum LockId {
   vesting = "vesting",
 }
 
-export const BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET = 100;
+export const START_FROM_BLOCK = 1;
+
+export const BALANCES_RPC_CALL_BLOCK_CHUNK_SIZE = 300;
+export const BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET = 300;
 export const BALANCES_RPC_CALL_BLOCK_TIMESTAMP_OFFSET = 24 * 60 * 60 * 1000; // 1 day in ms
 
-export enum RpcFunctionPaths {
+export enum RpcFunctionPath {
   systemAccountInfo = "query.system.account",
   crowdloanInfo = "query.crowdloan.funds",
   lastProcessedBlockNumber = "query.system.number",
@@ -54,41 +59,41 @@ export enum RpcFunctionPaths {
   parachainInfo = "query.registrar.paras",
 }
 export type RpcFunctionType = {
-  path: RpcFunctionPaths;
+  path: RpcFunctionPath;
   availableAtBlockNumber: number;
 };
 export class RpcFunction {
   static get systemAccountInfo(): RpcFunctionType {
     return {
-      path: RpcFunctionPaths.systemAccountInfo,
+      path: RpcFunctionPath.systemAccountInfo,
       availableAtBlockNumber: 1375087,
     };
   }
 
   static get crowdloanInfo(): RpcFunctionType {
     return {
-      path: RpcFunctionPaths.crowdloanInfo,
+      path: RpcFunctionPath.crowdloanInfo,
       availableAtBlockNumber: 7468104,
     };
   }
 
   static get lastProcessedBlockNumber(): RpcFunctionType {
     return {
-      path: RpcFunctionPaths.lastProcessedBlockNumber,
+      path: RpcFunctionPath.lastProcessedBlockNumber,
       availableAtBlockNumber: 1,
     };
   }
 
   static get lockedBalances(): RpcFunctionType {
     return {
-      path: RpcFunctionPaths.lockedBalances,
-      availableAtBlockNumber: 1,
+      path: RpcFunctionPath.lockedBalances,
+      availableAtBlockNumber: 3000000,
     };
   }
 
   static get parachainInfo(): RpcFunctionType {
     return {
-      path: RpcFunctionPaths.parachainInfo,
+      path: RpcFunctionPath.parachainInfo,
       availableAtBlockNumber: 7468793,
     };
   }

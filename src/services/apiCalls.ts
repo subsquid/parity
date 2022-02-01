@@ -7,8 +7,8 @@ import { SubstrateBlock } from "@subsquid/substrate-processor";
 import {
   LockId,
   PROVIDER,
-  RpcFunctionPaths,
   RpcFunction,
+  RpcFunctionPath,
   RpcFunctionType,
 } from "../constants";
 import { AccountAddress } from "../customTypes";
@@ -45,13 +45,80 @@ const getApiService = async (blockHash?: string): Promise<ApiService> => {
   return storedApiAtBlock;
 };
 
-const getRpcFunction = <Args extends Array<unknown>, Response>(
+const getRpcFunction = <Args extends Array<unknown>, Response = unknown>(
   apiService: ApiService,
-  functionPath: RpcFunctionPaths
+  functionPath: RpcFunctionPath
 ) => {
   return _.get(apiService, functionPath) as (
     ...args: Args
   ) => Promise<Response>;
+};
+
+const getRpcMulti = async <Args extends unknown[], Response>(
+  apiService: ApiService,
+  queries: Array<[(...args: Args) => Promise<Response>, ...Args]>
+): Promise<Array<Response>> => {
+  return (await apiService.queryMulti(
+    // todo get rid of ts-ignore
+    // @ts-ignore
+    queries
+  )) as unknown as Array<Response>;
+};
+
+const getRpcMultiRecursive = async <Args extends unknown[], Response>(
+  apiService: ApiService,
+  queries: Array<[(...args: Args) => Promise<Response>, ...Args]>
+): Promise<{
+  succeed: Array<Response>;
+  failedQueries: Array<[(...args: Args) => Promise<Response>, ...Args]>;
+}> => {
+  const callMulti = async (
+    queriesPart: Array<[(...args: Args) => Promise<Response>, ...Args]>
+  ) => {
+    return (await apiService.queryMulti(
+      // todo get rid of ts-ignore
+      // @ts-ignore
+      queriesPart
+    )) as unknown as Array<Response>;
+  };
+  const getMiddleIndex = (arrayLength: number): number => {
+    return arrayLength % 2 === 0 ? arrayLength / 2 : Math.ceil(arrayLength / 2);
+  };
+  if (!queries.length) {
+    return {
+      succeed: [],
+      failedQueries: [],
+    };
+  }
+
+  try {
+    return {
+      succeed: await callMulti(queries),
+      failedQueries: [],
+    };
+  } catch (err) {
+    if (queries.length === 1) {
+      return {
+        succeed: [],
+        failedQueries: queries,
+      };
+    }
+    const leftSucceed = await getRpcMultiRecursive(
+      apiService,
+      queries.slice(0, getMiddleIndex(queries.length))
+    );
+    const rightSucceed = await getRpcMultiRecursive(
+      apiService,
+      queries.slice(getMiddleIndex(queries.length))
+    );
+    return {
+      succeed: [...leftSucceed.succeed, ...rightSucceed.succeed],
+      failedQueries: [
+        ...leftSucceed.failedQueries,
+        ...rightSucceed.failedQueries,
+      ],
+    };
+  }
 };
 
 export const checkRpcAvailability = (
@@ -181,6 +248,78 @@ type SystemAccountData = {
   };
 };
 
+const zipAccountData = <T>(
+  addresses: Array<AccountAddress>,
+  dataItems: Array<T>
+): Record<AccountAddress, T> => {
+  const response: Record<AccountAddress, T> = {};
+
+  if (addresses.length !== dataItems.length) {
+    throw new Error(`Account addresses doesn't match provided data items!`);
+  }
+
+  for (let idx = 0; idx < addresses.length; idx += 1) {
+    if (!addresses[idx]) {
+      return response;
+    }
+    if (!dataItems[idx]) {
+      return response;
+    }
+    response[addresses[idx]] = dataItems[idx];
+  }
+
+  return response;
+};
+
+export const getSystemAccountInfos = async (
+  accountAddresses: AccountAddress[],
+  block?: SubstrateBlock
+): Promise<Record<AccountAddress, SystemAccountData>> => {
+  const apiService = await getApiService(block?.hash);
+  checkRpcAvailability({ apiService }, RpcFunction.systemAccountInfo, true);
+  const response = await getRpcMulti<
+    [string],
+    {
+      nonce: number;
+      consumers: number;
+      providers: number;
+      sufficients: number;
+      data: {
+        free?: u128;
+        reserved?: u128;
+        miscFrozen?: u128;
+        feeFrozen?: u128;
+      };
+    }
+  >(
+    apiService,
+    accountAddresses.map((accountAddress) => [
+      getRpcFunction(apiService, RpcFunction.systemAccountInfo.path),
+      accountAddress,
+    ])
+  );
+
+  const infos = response.map((accountInfo) => ({
+    ...accountInfo,
+    data: {
+      free: accountInfo.data.free
+        ? BigInt(accountInfo.data.free.toJSON())
+        : null,
+      reserved: accountInfo.data.reserved
+        ? BigInt(accountInfo.data.reserved.toJSON())
+        : null,
+      miscFrozen: accountInfo.data.miscFrozen
+        ? BigInt(accountInfo.data.miscFrozen.toJSON())
+        : null,
+      feeFrozen: accountInfo.data.feeFrozen
+        ? BigInt(accountInfo.data.feeFrozen.toJSON())
+        : null,
+    },
+  }));
+
+  return zipAccountData(accountAddresses, infos);
+};
+
 export const getSystemAccountInfo = async (
   accountAddress: AccountAddress,
   block?: SubstrateBlock
@@ -228,6 +367,38 @@ type LockedBalance = {
   id: LockId;
   amount: bigint;
   reasons: string;
+};
+
+export const getAccountLockedBalances = async (
+  accountAddresses: AccountAddress[],
+  block?: SubstrateBlock
+): Promise<Record<AccountAddress, Array<LockedBalance>>> => {
+  const apiService = await getApiService(block?.hash);
+  checkRpcAvailability({ apiService }, RpcFunction.lockedBalances, true);
+  const response = await getRpcMulti<
+    [string],
+    Array<{
+      id: Uint8Array;
+      amount: u128;
+      reasons: string;
+    }>
+  >(
+    apiService,
+    accountAddresses.map((accountAddress) => [
+      getRpcFunction(apiService, RpcFunction.lockedBalances.path),
+      accountAddress,
+    ])
+  );
+
+  const textDecoder = new TextDecoder();
+  const locks = response.map((balancesLocks) =>
+    balancesLocks.map(({ id, amount, reasons }) => ({
+      id: textDecoder.decode(id) as LockId,
+      amount: BigInt(amount.toString()),
+      reasons,
+    }))
+  );
+  return zipAccountData(accountAddresses, locks);
 };
 
 export const getLockedBalances = async (
