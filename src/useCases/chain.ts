@@ -1,6 +1,6 @@
 import { Store } from "@subsquid/substrate-processor";
 import { DeepPartial } from "typeorm";
-import { findById, upsert } from "./common";
+import { findByCriteria, upsert } from "./common";
 import { Chain } from "../model";
 import { KUSAMA_CHAIN_DETAILS } from "../constants";
 import { getKusamaToken } from "./token";
@@ -11,7 +11,10 @@ const chainCache: Map<string, Chain> = new Map();
 export const getChain = async (store: Store, id: number): Promise<Chain> => {
   let chain = chainCache.get(`${id}`);
   if (!chain) {
-    chain = await findById(store, Chain, `${id}`);
+    chain = await findByCriteria(store, Chain, {
+      where: { id: `${id}` },
+      relations: ["nativeToken"],
+    });
   }
   if (!chain) {
     chain = await createKusamaChain(store);
@@ -21,8 +24,10 @@ export const getChain = async (store: Store, id: number): Promise<Chain> => {
   return chain;
 };
 
-export const createOrUpdateChain = (store: Store, data: DeepPartial<Chain>) =>
-  upsert(store, Chain, data);
+export const createOrUpdateChain = (
+  store: Store,
+  data: DeepPartial<Chain>
+): Promise<Chain> => upsert(store, Chain, data);
 
 export const getKusamaChain = (store: Store): Promise<Chain> =>
   getChain(store, +KUSAMA_CHAIN_DETAILS.id);

@@ -45,7 +45,7 @@ export enum LockId {
   vesting = "vesting",
 }
 
-export const START_FROM_BLOCK = 1;
+export const START_FROM_BLOCK = 7469000;
 
 export const BALANCES_RPC_CALL_BLOCK_CHUNK_SIZE = 300;
 export const BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET = 300;
