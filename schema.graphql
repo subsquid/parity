@@ -97,4 +97,5 @@ type DebugMethodExecutionTime @entity {
   minMemoryUsage: Int
   maxMemoryUsage: Int
   currentBlockAtWork: Int!
+  metadata: String
 }

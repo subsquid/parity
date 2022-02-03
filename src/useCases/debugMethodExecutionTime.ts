@@ -64,7 +64,8 @@ export const logMethodExecutionEnd = async (
   store: Store,
   methodName: string,
   block: SubstrateBlock,
-  memoryUsage: number
+  memoryUsage: number,
+  metadata?: string
 ): Promise<void> => {
   const log = await getDebugMethodExecutionTime(
     store,
@@ -78,7 +79,7 @@ export const logMethodExecutionEnd = async (
   const execEndAt = new Date();
   const execTime = execEndAt.valueOf() - log.execStartAt.valueOf();
 
-  const newLog = {
+  const newLog: DebugMethodExecutionTime = {
     ...log,
     execEndAt,
     maxExecTime: Math.max(
@@ -98,6 +99,7 @@ export const logMethodExecutionEnd = async (
       memoryUsage,
       log.minMemoryUsage ?? Number.MAX_SAFE_INTEGER
     ),
+    metadata,
   };
   try {
     return await createOrUpdateDebugMethodExecutionTime(store, newLog);

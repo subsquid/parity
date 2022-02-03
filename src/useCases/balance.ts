@@ -20,7 +20,7 @@ import { AccountAddress } from "../customTypes";
 import {
   createOrUpdateCachedAccount,
   deleteCachesAccounts,
-  getAllCachedAccounts,
+  getManyCachedAccounts,
 } from "./cachedAccount";
 import {
   createOrUpdateFirstOfRpcBatchBlock,
@@ -101,7 +101,7 @@ export const storeAccountAndUpdateBalances = async (
       "storeAccountAndUpdateBalances"
     );
     const usageBefore = process.memoryUsage().heapUsed;
-    const cachedAccounts = await getAllCachedAccounts(
+    const [cachedAccounts, allCachedAccountCount] = await getManyCachedAccounts(
       store,
       BALANCES_RPC_CALL_BLOCK_CHUNK_SIZE
     );
@@ -170,7 +170,8 @@ export const storeAccountAndUpdateBalances = async (
       store,
       "storeAccountAndUpdateBalances",
       block,
-      usageAfter - usageBefore
+      usageAfter - usageBefore,
+      JSON.stringify({ allCachedAccountCount })
     );
   }
   return accounts;

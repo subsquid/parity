@@ -29,4 +29,7 @@ export class DebugMethodExecutionTime {
 
   @Column_("integer", {nullable: false})
   currentBlockAtWork!: number
+
+  @Column_("text", {nullable: true})
+  metadata!: string | undefined | null
 }

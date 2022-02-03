@@ -29,6 +29,14 @@ export const findMany = <T>(
   return store.getRepository(EntityConstructor).find(options);
 };
 
+export const findManyAndCount = <T>(
+  store: Store,
+  EntityConstructor: EntityConstructor<T>,
+  options?: FindManyOptions<T>
+): Promise<[T[], number]> => {
+  return store.getRepository(EntityConstructor).findAndCount(options);
+};
+
 export const findManyByIds = <T>(
   store: Store,
   EntityConstructor: EntityConstructor<T>,
