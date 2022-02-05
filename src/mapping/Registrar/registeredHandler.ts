@@ -7,6 +7,7 @@ import { AccountAddress } from "../../customTypes";
 import {
   createOrUpdateChain,
   getKusamaChainId,
+  getKusamaToken,
   storeAccountAndUpdateBalances,
 } from "../../useCases";
 import { toKusamaFormat } from "../../utils/addressConvertor";
@@ -24,6 +25,7 @@ export const registeredHandler: EventHandler = async (ctx): Promise<void> => {
     relayChain: false,
     relayId: await getKusamaChainId(store),
     registeredAt: timestampToDate(block),
+    nativeToken: await getKusamaToken(store),
   });
 
   await storeAccountAndUpdateBalances(store, block, [managerId]);
