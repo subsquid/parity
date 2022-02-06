@@ -1,27 +1,24 @@
 import { Store } from "@subsquid/substrate-processor";
 import { DeepPartial } from "typeorm";
 import { Account, Chain } from "../model";
-import { findById, upsert } from "./common";
+import { upsert } from "./common";
 import {
   convertAddressToKusama,
   convertAddressToSubstrate,
 } from "../utils/addressConvertor";
-import { getKusamaChain } from "./chain";
-
-export const getAccount = (store: Store, id: string) =>
-  findById(store, Account, id);
+import { getOrCreateKusamaChain } from "./chain";
 
 export const createOrUpdateAccount = (
   store: Store,
   data: DeepPartial<Account>
-) => upsert(store, Account, data);
+): Promise<Account> => upsert(store, Account, data);
 
 export const createOrUpdateKusamaAccount = async (
   store: Store,
   kusamaAccountAddress: string,
   chain?: Chain
 ): Promise<Account> => {
-  const accountChain = chain || (await getKusamaChain(store));
+  const accountChain = chain || (await getOrCreateKusamaChain(store));
 
   return createOrUpdateAccount(store, {
     // to make sure it is really Kusama Address

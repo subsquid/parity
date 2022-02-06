@@ -5,8 +5,8 @@ import {
 import { v4 } from "uuid";
 import { BalancesTransferEvent } from "../../types/events";
 import {
-  createOrUpdateTransfer,
-  getKusamaToken,
+  createTransfer,
+  getOrCreateKusamaToken,
   storeAccountAndUpdateBalances,
 } from "../../useCases";
 import { toKusamaFormat } from "../../utils/addressConvertor";
@@ -29,11 +29,11 @@ export const transferHandler: EventHandler = async (ctx) => {
     [from, to]
   );
 
-  await createOrUpdateTransfer(store, {
+  await createTransfer(store, {
     id: v4().toString(),
     senderAccount: accountFrom,
     receiverAccount: accountTo,
-    token: await getKusamaToken(store),
+    token: await getOrCreateKusamaToken(store),
     amount,
     timestamp: timestampToDate(block),
   });

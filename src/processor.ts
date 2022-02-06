@@ -3,7 +3,6 @@ import {
   SubstrateProcessor,
 } from "@subsquid/substrate-processor";
 import { addBalancesEventHandlers } from "./mapping";
-// import { addCrowdloanEventsHandlers } from "./mapping/Crowdloan";
 import { addRegistrarEventsHandlers } from "./mapping/Registrar";
 import { addStakingEventHandlers } from "./mapping/Staking";
 import { addVestingEventHandlers } from "./mapping/Vesting";
@@ -11,17 +10,21 @@ import { loadGenesisData } from "./mapping/preBlockHooks";
 import {
   CHAIN_NODE,
   INDEXER_ENDPOINT_URL,
+  PROCESSOR_BATCH_SIZE,
   START_FROM_BLOCK,
 } from "./constants";
 import {
   logMethodExecutionEnd,
   logMethodExecutionStart,
 } from "./useCases/debugMethodExecutionTime";
+import { addAuctionEventHandlers } from "./mapping/Auction";
+import { addSlotsEventsHandlers } from "./mapping/Slots";
+import { addCrowdloanEventsHandlers } from "./mapping/Crowdloan";
 
 const processor = new SubstrateProcessor("kusama_processor");
 
 processor.setTypesBundle("kusama");
-processor.setBatchSize(500);
+processor.setBatchSize(PROCESSOR_BATCH_SIZE);
 
 processor.setDataSource({
   archive: INDEXER_ENDPOINT_URL,
@@ -52,11 +55,14 @@ const patchProcessor = (substrateProcessor: SubstrateProcessor) => {
     }) as EventHandler);
   };
 };
-patchProcessor(processor);
+// patchProcessor(processor);
+
+addAuctionEventHandlers(processor);
+addCrowdloanEventsHandlers(processor);
+addRegistrarEventsHandlers(processor);
+addSlotsEventsHandlers(processor);
 
 addBalancesEventHandlers(processor);
-// addCrowdloanEventsHandlers(processor);
-addRegistrarEventsHandlers(processor);
 addStakingEventHandlers(processor);
 addVestingEventHandlers(processor);
 processor.addPreHook(loadGenesisData);

@@ -1,6 +1,6 @@
 import {
-  Column as Column_,
   Entity as Entity_,
+  Column as Column_,
   PrimaryColumn as PrimaryColumn_,
 } from "typeorm";
 
@@ -16,9 +16,9 @@ export class CrowdloanSequence {
   @Column_("integer", { nullable: false })
   curIndex!: number;
 
-  @Column_("integer", { nullable: false })
-  blockNum!: number;
-
   @Column_("timestamp with time zone", { nullable: false })
   createdAt!: Date;
+
+  @Column_("integer", { nullable: false })
+  blockNum!: number;
 }

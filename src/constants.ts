@@ -2,12 +2,11 @@ import { WsProvider } from "@polkadot/api";
 
 // export const CHAIN_NODE = "wss://kusama-rpc.polkadot.io";
 export const CHAIN_NODE =
-  "wss://rpc.pinknode.io/kusama/7d28e241-bcc4-4708-8919-405a50b578ca";
+  "wss://rpc.pinknode.io/kusama/59813174-7e9b-4da6-be8c-96b93648e51a";
 export const INDEXER_ENDPOINT_URL =
   "https://kusama.indexer.gc.subsquid.io/v4/graphql";
 
 export const PROVIDER = new WsProvider(CHAIN_NODE);
-export const API_RETRIES = 5;
 export const STASH_FILES = [
   "0-1999.json",
   "2000-3999.json",
@@ -31,11 +30,9 @@ export const KUSAMA_CHAIN_DETAILS = {
   registeredAt: new Date("2019-11-28Z17:27:54"), // remake it to rpc call
 };
 
-export enum CrowdloanStatus {
-  RETIRING = "Retiring",
-  DISSOLVED = "Dissolved",
-  STARTED = "Started",
-  WON = "Won",
+export enum AuctionStatus {
+  Started = "Started",
+  Closed = "Closed",
 }
 
 export enum LockId {
@@ -45,56 +42,109 @@ export enum LockId {
   vesting = "vesting",
 }
 
-export const START_FROM_BLOCK = 1;
+// todo; DO NOT FORGET IT!
+export const START_FROM_BLOCK = 7828269;
+export const PROCESSOR_BATCH_SIZE = 500;
+// export const START_FROM_BLOCK = 7924237;
+// export const START_FROM_BLOCK = 1;
 
-export const BALANCES_RPC_CALL_BLOCK_CHUNK_SIZE = 300;
-export const BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET = 300;
-export const BALANCES_RPC_CALL_BLOCK_TIMESTAMP_OFFSET = 24 * 60 * 60 * 1000; // 1 day in ms
+export const BALANCES_RPC_BLOCK_CHUNK_SIZE = 500;
+export const BALANCES_RPC_PER_BATCH = 3;
+export const BALANCES_RPC_BLOCK_HEIGHT_OFFSET = 300;
+export const BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET = 24 * 60 * 60 * 1000; // 1 day in ms
 
-export enum RpcFunctionPath {
+export enum RpcQueriesPath {
   systemAccountInfo = "query.system.account",
   crowdloanInfo = "query.crowdloan.funds",
-  lastProcessedBlockNumber = "query.system.number",
   lockedBalances = "query.balances.locks",
   parachainInfo = "query.registrar.paras",
+  timestamp = "query.timestamp.now",
 }
-export type RpcFunctionType = {
-  path: RpcFunctionPath;
-  availableAtBlockNumber: number;
-};
+
+export enum RpcConstantPath {
+  auctionEndingPeriod = "consts.auctions.endingPeriod",
+  auctionLeasePeriodsPerSlot = "consts.auctions.leasePeriodsPerSlot",
+  slotsLeasePeriod = "consts.slots.leasePeriod",
+}
+
+export enum RpcChainPath {
+  blockHash = "rpc.chain.getBlockHash",
+}
+
+export interface IRpcFunctionItem {
+  path: RpcQueriesPath | RpcConstantPath | RpcChainPath;
+  availableAtBlockNumber: number | string;
+  callable?: boolean;
+  // Whether function response should be cached or not
+  cache?: boolean;
+  // Max amount of cache value to be read. Needed sometimes to keep cache up to date.
+  cacheLimit?: number;
+}
+
+class RpcQuery implements IRpcFunctionItem {
+  constructor(
+    public path: RpcQueriesPath,
+    public availableAtBlockNumber: number,
+    public callable: boolean = true,
+    public cache: boolean = true,
+    public cacheLimit?: number
+  ) {}
+}
+
+class RpcChain implements IRpcFunctionItem {
+  constructor(
+    public path: RpcChainPath,
+    public availableAtBlockNumber: string = "last",
+    public callable: boolean = true,
+    public cache: boolean = true,
+    public cacheLimit?: number
+  ) {}
+}
+
+class RpcConstant implements IRpcFunctionItem {
+  constructor(
+    public path: RpcConstantPath,
+    public availableAtBlockNumber: string = "last",
+    public callable: boolean = false,
+    public cache: boolean = true,
+    public cacheLimit?: number
+  ) {}
+}
+
 export class RpcFunction {
-  static get systemAccountInfo(): RpcFunctionType {
-    return {
-      path: RpcFunctionPath.systemAccountInfo,
-      availableAtBlockNumber: 1375087,
-    };
+  static get systemAccountInfo(): IRpcFunctionItem {
+    return new RpcQuery(RpcQueriesPath.systemAccountInfo, 1375087);
   }
 
-  static get crowdloanInfo(): RpcFunctionType {
-    return {
-      path: RpcFunctionPath.crowdloanInfo,
-      availableAtBlockNumber: 7468104,
-    };
+  static get crowdloanInfo(): IRpcFunctionItem {
+    return new RpcQuery(RpcQueriesPath.crowdloanInfo, 7468104, true, true, 200);
   }
 
-  static get lastProcessedBlockNumber(): RpcFunctionType {
-    return {
-      path: RpcFunctionPath.lastProcessedBlockNumber,
-      availableAtBlockNumber: 1,
-    };
+  static get lockedBalances(): IRpcFunctionItem {
+    return new RpcQuery(RpcQueriesPath.lockedBalances, 3000000);
   }
 
-  static get lockedBalances(): RpcFunctionType {
-    return {
-      path: RpcFunctionPath.lockedBalances,
-      availableAtBlockNumber: 3000000,
-    };
+  static get parachainInfo(): IRpcFunctionItem {
+    return new RpcQuery(RpcQueriesPath.parachainInfo, 7468793, true, true, 200);
   }
 
-  static get parachainInfo(): RpcFunctionType {
-    return {
-      path: RpcFunctionPath.parachainInfo,
-      availableAtBlockNumber: 7468793,
-    };
+  static get timestamp(): IRpcFunctionItem {
+    return new RpcQuery(RpcQueriesPath.timestamp, 1);
+  }
+
+  static get auctionEndingPeriod(): IRpcFunctionItem {
+    return new RpcConstant(RpcConstantPath.auctionEndingPeriod);
+  }
+
+  static get auctionLeasePeriodsPerSlot(): IRpcFunctionItem {
+    return new RpcConstant(RpcConstantPath.auctionLeasePeriodsPerSlot);
+  }
+
+  static get slotsLeasePeriod(): IRpcFunctionItem {
+    return new RpcConstant(RpcConstantPath.slotsLeasePeriod);
+  }
+
+  static get blockHash(): IRpcFunctionItem {
+    return new RpcChain(RpcChainPath.blockHash);
   }
 }

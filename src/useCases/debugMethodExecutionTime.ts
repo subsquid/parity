@@ -33,19 +33,16 @@ const getDebugMethodExecutionTime = async (
 
 const createOrUpdateDebugMethodExecutionTime = async (
   store: Store,
-  data: DeepPartial<DebugMethodExecutionTime>
+  data: DeepPartial<DebugMethodExecutionTime> & { id: string }
 ) => {
+  cache.set(data.id, { ...cache.get(data.id), ...data });
   if (data.currentBlockAtWork && shouldCallDB(data.currentBlockAtWork)) {
-    cache.set(data.id || "", data);
-
     const entities = store.create(
       DebugMethodExecutionTime,
       Array.from(cache.values()) as DebugMethodExecutionTime[]
     );
-
     await store.save(entities);
   }
-  cache.set(data.id || "", data);
 };
 
 export const logMethodExecutionStart = (
@@ -82,14 +79,8 @@ export const logMethodExecutionEnd = async (
   const newLog: DebugMethodExecutionTime = {
     ...log,
     execEndAt,
-    maxExecTime: Math.max(
-      execTime,
-      log.maxExecTime?.valueOf() ?? Number.MIN_SAFE_INTEGER
-    ),
-    minExecTime: Math.min(
-      execTime,
-      log.minExecTime?.valueOf() ?? Number.MAX_SAFE_INTEGER
-    ),
+    maxExecTime: Math.max(execTime, log.maxExecTime ?? Number.MIN_SAFE_INTEGER),
+    minExecTime: Math.min(execTime, log.minExecTime ?? Number.MAX_SAFE_INTEGER),
     currentBlockAtWork: block.height,
     maxMemoryUsage: Math.max(
       memoryUsage,

@@ -1,101 +1,90 @@
 type Token @entity {
-  id: ID!
-  name: String!
+    id: ID!
+    name: String!
 }
 
 type Chain @entity {
-  id: ID!
-  nativeToken: Token!
-  name: String
-  relayId: ID!
-  relayChain: Boolean!
-  registeredAt: DateTime!
-  deregisteredAt: DateTime
+    id: ID!
+    nativeToken: Token!
+    name: String
+    relayId: ID!
+    relayChain: Boolean!
+    registeredAt: DateTime!
+    deregisteredAt: DateTime
+    crowdloans: [Crowdloan] @derivedFrom(field: "para")
 }
 
 type Account @entity {
-  id: ID!
-  chain: Chain!
-  substrateAccount: String!
-#  incomingTransfers: [Transfer] @derivedFrom(field: "receiverAccount")
-#  outgoingTransfers: [Transfer] @derivedFrom(field: "senderAccount")
-#  balance: Balance @derivedFrom(field: "account")
-#  historicalBalances: [HistoricalBalance] @derivedFrom(field: "account")
+    id: ID!
+    chain: Chain!
+    substrateAccount: String!
+    incomingTransfers: [Transfer] @derivedFrom(field: "receiverAccount")
+    outgoingTransfers: [Transfer] @derivedFrom(field: "senderAccount")
+    balance: Balance
+    historicalBalances: [HistoricalBalance] @derivedFrom(field: "account")
+    contributions: [Contribution] @derivedFrom(field: "account")
 }
 
 type Transfer @entity {
-  id: ID!
-  senderAccount: Account!
-  receiverAccount: Account!
-  token: Token!
-  amount: BigInt!
-  timestamp: DateTime!
+    id: ID!
+    senderAccount: Account!
+    receiverAccount: Account!
+    token: Token!
+    amount: BigInt!
+    timestamp: DateTime!
 }
 
 type Balance @entity {
-  id: ID!
-#  todo; Add index on account-token; add Uniq constraint for pair account-token;
-  account: Account!
-  token: Token!
-  reservedBalance: BigInt
-  freeBalance: BigInt
-  lockedBalance: BigInt
-  bondedBalance: BigInt
-  vestedBalance: BigInt
-  democracyBalance: BigInt
-  electionBalance: BigInt
+    id: ID!
+    #  todo; Add index on account-token; add Uniq constraint for pair account-token;
+    account: Account!
+    token: Token!
+    reservedBalance: BigInt
+    freeBalance: BigInt
+    lockedBalance: BigInt
+    bondedBalance: BigInt
+    vestedBalance: BigInt
+    democracyBalance: BigInt
+    electionBalance: BigInt
 }
 
 type HistoricalBalance @entity {
-  id: ID!
-  #  todo; Add index on account-token-timestamp; add Uniq constraint for account-token-timestamp;
-  account: Account!
-  token: Token!
-  timestamp: DateTime!
-  reservedBalance: BigInt
-  freeBalance: BigInt
-  lockedBalance: BigInt
-  bondedBalance: BigInt
-  vestedBalance: BigInt
-  democracyBalance: BigInt
-  electionBalance: BigInt
+    id: ID!
+    #  todo; Add index on account-token-timestamp; add Uniq constraint for account-token-timestamp;
+    account: Account!
+    token: Token!
+    timestamp: DateTime!
+    reservedBalance: BigInt
+    freeBalance: BigInt
+    lockedBalance: BigInt
+    bondedBalance: BigInt
+    vestedBalance: BigInt
+    democracyBalance: BigInt
+    electionBalance: BigInt
 }
 
 type Crowdloan @entity {
-  id: ID!
-  para: Chain!
-  token: Token!
-  cap: BigInt
-  slotStart: Int
-  slotEnd: Int
-  campaignCreateDate: DateTime
-  campaignEndDate: DateTime
-  won: Boolean!
-  dissolve: Boolean
-  dissolvedDate: DateTime
-  auctionNumber: Int
-  leaseStart: DateTime
-  leaseEnd: DateTime
-  contributions: [Contribution] @derivedFrom(field: "crowdloan")
+    id: ID!
+    para: Chain!
+    token: Token!
+    cap: BigInt
+    slotStart: Int
+    slotEnd: Int
+    campaignCreateDate: DateTime
+    campaignEndDate: DateTime
+    won: Boolean!
+    dissolve: Boolean
+    dissolvedDate: DateTime
+    auctionNumber: Int
+    leaseStart: DateTime
+    leaseEnd: DateTime
+    contributions: [Contribution] @derivedFrom(field: "crowdloan")
 }
 
 type Contribution @entity {
-  id: ID!
-  crowdloan: Crowdloan!
-  account: Account!
-  withdrawal: Boolean!
-  amount: BigInt!
-  timestamp: DateTime!
-}
-
-type DebugMethodExecutionTime @entity {
-  id: ID!
-  execStartAt: DateTime!
-  execEndAt: DateTime
-  minExecTime: Int
-  maxExecTime: Int
-  minMemoryUsage: Int
-  maxMemoryUsage: Int
-  currentBlockAtWork: Int!
-  metadata: String
+    id: ID!
+    crowdloan: Crowdloan!
+    account: Account!
+    amount: BigInt!
+    timestamp: DateTime!
 }

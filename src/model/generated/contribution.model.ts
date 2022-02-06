@@ -20,9 +20,6 @@ export class Contribution {
   @ManyToOne_(() => Account, {nullable: false})
   account!: Account
 
-  @Column_("bool", {nullable: false})
-  withdrawal!: boolean
-
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
   amount!: bigint
 

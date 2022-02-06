@@ -4,10 +4,10 @@
 import { BlockHandler } from "@subsquid/substrate-processor";
 import * as fs from "fs";
 import * as path from "path";
-import * as util from "util";
 import { STASH_FILES } from "../../constants";
 import {
   createOrUpdateKusamaAccount,
+  initializeChronicle,
   initializeKusamaChain,
 } from "../../useCases";
 import { convertAddressToSubstrate } from "../../utils/addressConvertor";
@@ -84,19 +84,6 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
 
   const { store } = ctx;
 
-  console.log("Initializing Indexer with defaults");
-  console.log("Initializing Indexer with defaults completed");
-  console.log("Starting to take up initial bootstrap");
-
-  await util
-    .promisify(fs.readdir)(path.resolve(process.cwd(), "./lib"))
-    .then((files) => {
-      files.forEach((file) => {
-        // Do whatever you want to do with the file
-        console.log(file);
-      });
-    });
-
   const timestampJSON = JSON.parse(
     fs.readFileSync(
       path.resolve(`${__dirname}/../../../blocksStash/timestamp.json`),
@@ -119,7 +106,6 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
     return events.blockEvents.map(
       // Iterating through each block
       (blockElement) => {
-        console.log("Processing  block:", blockElement.blockNumber);
         // Iterating extrinsics
         return blockElement.events.map((extrinsicItem) => {
           const newAccounts = extrinsicItem.events.filter(
@@ -128,7 +114,6 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
               element.method === "NewAccount" && element.section === "balances"
           );
           return newAccounts.forEach((account) => {
-            console.log("Creating new Account", account.data[0]);
             newAccountData.push({
               address: account.data[0] as string,
               freeBalance: BigInt(account.data[1]),
@@ -143,6 +128,7 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
   });
 
   await initializeKusamaChain(store);
+  await initializeChronicle(store);
 
   await Promise.all(
     newAccountData.map(async ({ address }) => {
@@ -152,4 +138,5 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
       );
     })
   );
+  console.log("BlocksStash successfully processed.");
 };

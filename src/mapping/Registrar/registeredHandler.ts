@@ -5,9 +5,9 @@ import {
 import { RegistrarRegisteredEvent } from "../../types/events";
 import { AccountAddress } from "../../customTypes";
 import {
-  createOrUpdateChain,
+  createChain,
   getKusamaChainId,
-  getKusamaToken,
+  getOrCreateKusamaToken,
   storeAccountAndUpdateBalances,
 } from "../../useCases";
 import { toKusamaFormat } from "../../utils/addressConvertor";
@@ -19,13 +19,15 @@ export const registeredHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block } = ctx;
   const { paraId, managerId } = getEvent(ctx);
 
-  await createOrUpdateChain(store, {
+  await createChain(store, {
     id: `${paraId}`,
     name: `${paraId}-${managerId}`,
     relayChain: false,
     relayId: await getKusamaChainId(store),
     registeredAt: timestampToDate(block),
-    nativeToken: await getKusamaToken(store),
+    nativeToken: await getOrCreateKusamaToken(store),
+    deregisteredAt: null,
+    crowdloans: [],
   });
 
   await storeAccountAndUpdateBalances(store, block, [managerId]);
