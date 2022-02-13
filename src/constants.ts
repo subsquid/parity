@@ -42,11 +42,8 @@ export enum LockId {
   vesting = "vesting",
 }
 
-// todo; DO NOT FORGET IT!
-export const START_FROM_BLOCK = 7828269;
+export const START_FROM_BLOCK = 1;
 export const PROCESSOR_BATCH_SIZE = 500;
-// export const START_FROM_BLOCK = 7924237;
-// export const START_FROM_BLOCK = 1;
 
 export const BALANCES_RPC_BLOCK_CHUNK_SIZE = 500;
 export const BALANCES_RPC_PER_BATCH = 3;
