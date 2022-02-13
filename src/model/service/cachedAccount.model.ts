@@ -4,6 +4,7 @@ import {
   OneToOne as OneToOne_,
   PrimaryColumn as PrimaryColumn_,
   RelationId as RelationId_,
+  Column as Column_,
 } from "typeorm";
 import { Account } from "../generated";
 
@@ -20,4 +21,10 @@ export class CachedAccount {
   @PrimaryColumn_()
   @RelationId_(({ account }: CachedAccount) => account)
   accountId!: string;
+
+  @Column_("timestamp with time zone", { nullable: true })
+  blacklistedAtBlockTimestamp?: Date | null;
+
+  @Column_("integer", { nullable: true })
+  blacklistedAtBlockHeight?: number | null;
 }

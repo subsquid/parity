@@ -4,6 +4,7 @@ import { FindManyOptions } from "typeorm/find-options/FindManyOptions";
 import { ObjectID } from "typeorm/driver/mongodb/typings";
 import { FindConditions } from "typeorm/find-options/FindConditions";
 import { FindOneOptions } from "typeorm/find-options/FindOneOptions";
+import { NotFoundError } from "../utils/errors";
 
 export const findById = <T>(
   store: Store,
@@ -52,6 +53,51 @@ export const upsert = <T>(
 ): Promise<T> => {
   const entity = new EntityConstructor(data);
   return store.save(entity);
+};
+
+export const insert = async <T>(
+  store: Store,
+  EntityConstructor: EntityConstructor<T>,
+  data: T
+): Promise<void> => {
+  await store.insert(EntityConstructor, data);
+};
+
+export const insertAndReturn = async <T>(
+  store: Store,
+  EntityConstructor: EntityConstructor<T>,
+  data: T & { id: string }
+): Promise<T> => {
+  await insert(store, EntityConstructor, data);
+  const entity = await store.findOne(EntityConstructor, {
+    where: { id: data.id },
+  });
+  // We are sure that entity is not undefined, since insert function would have thrown an error before.
+  return entity as T;
+};
+
+export const update = async <T>(
+  store: Store,
+  EntityConstructor: EntityConstructor<T>,
+  criteria: FindConditions<T>,
+  data: DeepPartial<T>
+): Promise<void> => {
+  const updateResult = await store.update(EntityConstructor, criteria, data);
+  if (!updateResult.affected) {
+    throw new NotFoundError(EntityConstructor.constructor.name, { criteria });
+  }
+};
+
+export const updateAndReturn = async <T>(
+  store: Store,
+  EntityConstructor: EntityConstructor<T>,
+  criteria: FindConditions<T>,
+  data: DeepPartial<T>
+): Promise<T> => {
+  await update(store, EntityConstructor, criteria, data);
+  const entity = await store.findOne(EntityConstructor, criteria);
+  // We are sure that entity is not undefined, since update function would have thrown an error before.
+  return entity as T;
 };
 
 export const deleteMany = async <T>(

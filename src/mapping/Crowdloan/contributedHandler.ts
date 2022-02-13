@@ -6,41 +6,38 @@ import { CrowdloanContributedEvent } from "../../types/events";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { AccountAddress } from "../../customTypes";
 import {
-  createOrUpdateContribution,
-  ensureFund,
-  getCrowdloan,
+  createContribution,
+  ensureCrowdloan,
   storeAccountAndUpdateBalances,
 } from "../../useCases";
+import { timestampToDate } from "../../utils/common";
+import { NotFoundError } from "../../utils/errors";
 
-type EventType = { who: AccountAddress; fundIndex: number; amount: bigint };
+type EventType = { who: AccountAddress; parachainId: number; amount: bigint };
 
 export const contributedHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block, event } = ctx;
-  const { who, fundIndex: fundIdx, amount } = getEvent(ctx);
+  const { who, parachainId, amount } = getEvent(ctx);
 
-  // todo; KRI; Verify this approach
-  const fund = await ensureFund(fundIdx, store, block);
+  const [account] = await storeAccountAndUpdateBalances(store, block, [who]);
 
-  const [contributor] = await storeAccountAndUpdateBalances(store, block, [
-    who,
-  ]);
-
-  if (!contributor) {
-    console.error("Contributor not found");
-    process.exit(0);
+  if (!account) {
+    throw new NotFoundError("Account", { address: who });
   }
 
-  // const parachain = fund.parachain
-  const crowdloan = await getCrowdloan(store, fund.id);
+  const crowdloan = await ensureCrowdloan(parachainId, store, block);
+
+  if (!crowdloan?.id) {
+    throw new NotFoundError("Crowdloan", { parachainId });
+  }
 
   if (crowdloan) {
-    await createOrUpdateContribution(store, {
+    await createContribution(store, {
       id: `${block.height}-${event.id}`,
       crowdloan,
-      account: contributor,
-      withdrawal: false,
+      account,
       amount,
-      timestamp: new Date(block.timestamp),
+      timestamp: timestampToDate(block),
     });
   }
 };
@@ -48,6 +45,6 @@ export const contributedHandler: EventHandler = async (ctx): Promise<void> => {
 const getEvent = (ctx: EventHandlerContext): EventType => {
   const event = new CrowdloanContributedEvent(ctx);
 
-  const [who, fundIndex, amount] = event.asLatest;
-  return { who: toKusamaFormat(who), fundIndex, amount };
+  const [who, parachainId, amount] = event.asLatest;
+  return { who: toKusamaFormat(who), parachainId, amount };
 };

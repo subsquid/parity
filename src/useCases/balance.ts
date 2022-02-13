@@ -3,21 +3,21 @@ import { DeepPartial } from "typeorm";
 import { max } from "lodash";
 import { v4 } from "uuid";
 import { Account, Balance } from "../model";
-import { findByCriteria, findById, upsert } from "./common";
+import { findByCriteria, upsert } from "./common";
 import {
-  checkRpcAvailability,
   getAccountLockedBalances,
   getSystemAccountInfos,
 } from "../services/apiCalls";
 import {
-  BALANCES_RPC_CALL_BLOCK_CHUNK_SIZE,
-  BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET,
-  BALANCES_RPC_CALL_BLOCK_TIMESTAMP_OFFSET,
+  BALANCES_RPC_BLOCK_CHUNK_SIZE,
+  BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET,
+  BALANCES_RPC_PER_BATCH,
   LockId,
   RpcFunction,
 } from "../constants";
 import { AccountAddress } from "../customTypes";
 import {
+  blacklistCachedAccounts,
   createOrUpdateCachedAccount,
   deleteCachesAccounts,
   getManyCachedAccounts,
@@ -28,19 +28,16 @@ import {
 } from "./firstOfRpcBatchBlock";
 import { createOrUpdateAccount } from "./account";
 import { timestampToDate } from "../utils/common";
-import { getKusamaToken } from "./token";
+import { getOrCreateKusamaToken } from "./token";
 import { createOrUpdateHistoricalBalance } from "./historicalBalance";
 import { convertAddressToSubstrate } from "../utils/addressConvertor";
-import { getKusamaChain } from "./chain";
+import { getOrCreateKusamaChain } from "./chain";
 import {
   logMethodExecutionEnd,
   logMethodExecutionStart,
 } from "./debugMethodExecutionTime";
-
-export const getBalance = (
-  store: Store,
-  id: string
-): Promise<Balance | undefined> => findById(store, Balance, id);
+import { FunctionIsNotAvailableError } from "../utils/errors";
+import { checkRpcAvailability } from "../services/apiCommon";
 
 export const getAccountBalance = (
   store: Store,
@@ -54,6 +51,8 @@ export const createOrUpdateBalance = (
   data: DeepPartial<Balance>
 ): Promise<Balance> => upsert(store, Balance, data);
 
+// temp counter of calls; Needed to avoid memory leak.
+let amountOfRPCsDone = 0;
 /*
  * create accounts;
  * store them in the temporal storage;
@@ -64,7 +63,10 @@ export const storeAccountAndUpdateBalances = async (
   block: SubstrateBlock,
   accountAddresses: AccountAddress[] // in Kusama format only!
 ): Promise<Account[]> => {
-  const kusamaChain = await getKusamaChain(store);
+  await logMethodExecutionStart(store, block, "storeAccountAndUpdateBalances");
+  const usageBefore = process.memoryUsage().heapUsed;
+
+  const kusamaChain = await getOrCreateKusamaChain(store);
   // create accounts for given addresses if not exist
   const accounts = await Promise.all(
     // this approach is acceptable until accountAddress.length <= 2
@@ -79,31 +81,27 @@ export const storeAccountAndUpdateBalances = async (
   // store given accounts for the further RPC call
   await Promise.all(
     accountAddresses.map((accountAddress) =>
-      createOrUpdateCachedAccount(store, { accountId: accountAddress })
+      createOrUpdateCachedAccount(store, {
+        accountId: accountAddress,
+        blacklistedAtBlockTimestamp: null,
+        blacklistedAtBlockHeight: null,
+      })
     )
   );
-
   const firstOfRpcBatchBlock = await getFirstOfRpcBatchBlock(store);
   if (!firstOfRpcBatchBlock) {
     await createOrUpdateFirstOfRpcBatchBlock(store, block);
     return accounts;
   }
-  // Idea is to collect data for accounts each 100 blocks or at least for yesterday :)
+  // Idea is to collect data for accounts each day :)
   if (
-    block.height - firstOfRpcBatchBlock.height >=
-      BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET ||
     block.timestamp - firstOfRpcBatchBlock.timestamp.valueOf() >=
-      BALANCES_RPC_CALL_BLOCK_TIMESTAMP_OFFSET
+    BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET
   ) {
-    await logMethodExecutionStart(
+    const [cachedAccounts, cachedAccountAmount] = await getManyCachedAccounts(
       store,
-      block,
-      "storeAccountAndUpdateBalances"
-    );
-    const usageBefore = process.memoryUsage().heapUsed;
-    const [cachedAccounts, allCachedAccountCount] = await getManyCachedAccounts(
-      store,
-      BALANCES_RPC_CALL_BLOCK_CHUNK_SIZE
+      { blacklistedAtBlockHeight: null, blacklistedAtBlockTimestamp: null },
+      BALANCES_RPC_BLOCK_CHUNK_SIZE
     );
 
     const cashedAccountIds = cachedAccounts.map(({ accountId }) => accountId);
@@ -112,8 +110,9 @@ export const storeAccountAndUpdateBalances = async (
         cashedAccountIds,
         block
       );
+      amountOfRPCsDone += 1;
 
-      const kusamaToken = await getKusamaToken(store);
+      const kusamaToken = await getOrCreateKusamaToken(store);
 
       await Promise.all(
         Object.entries(accountDataCollection).map(
@@ -154,26 +153,38 @@ export const storeAccountAndUpdateBalances = async (
         )
       );
 
-      // adjust first block on current
-      await createOrUpdateFirstOfRpcBatchBlock(store, block);
+      // only if we finished with all cashed accounts
+      if (
+        cachedAccounts.length === cachedAccountAmount ||
+        amountOfRPCsDone === BALANCES_RPC_PER_BATCH
+      ) {
+        // adjust first block on current
+        await createOrUpdateFirstOfRpcBatchBlock(store, block);
+        amountOfRPCsDone = 0;
+      }
+
       // remove all cached, since they all already processed
       // await pruneAllCachedAccounts(store);
       await deleteCachesAccounts(store, cashedAccountIds);
     } catch (error) {
       // if faced an error - postpone processing on BALANCES_RPC_CALL_BLOCK_HEIGHT_OFFSET blocks
       await createOrUpdateFirstOfRpcBatchBlock(store, block);
+
+      if (!(error instanceof FunctionIsNotAvailableError)) {
+        // and exclude accounts from the further updates, until they appear in the list again
+        await blacklistCachedAccounts(store, cashedAccountIds, block);
+      }
     }
-
-    const usageAfter = process.memoryUsage().heapUsed;
-
-    await logMethodExecutionEnd(
-      store,
-      "storeAccountAndUpdateBalances",
-      block,
-      usageAfter - usageBefore,
-      JSON.stringify({ allCachedAccountCount })
-    );
   }
+
+  const usageAfter = process.memoryUsage().heapUsed;
+
+  await logMethodExecutionEnd(
+    store,
+    "storeAccountAndUpdateBalances",
+    block,
+    usageAfter - usageBefore
+  );
   return accounts;
 };
 
@@ -242,16 +253,14 @@ export const getAccountData = async (
   block: SubstrateBlock
 ): Promise<Record<string, AccountBalances>> => {
   // check rpc function availability
-  if (
-    !checkRpcAvailability({ block }, RpcFunction.systemAccountInfo) ||
-    !checkRpcAvailability({ block }, RpcFunction.lockedBalances)
-  ) {
-    throw new Error("Functions are not available");
-  }
+  checkRpcAvailability({ block }, RpcFunction.systemAccountInfo);
+  checkRpcAvailability({ block }, RpcFunction.lockedBalances);
 
   // get data and assign it to the corresponding account at the same time
-  const infos = await getSystemAccountInfos(accountAddresses, block);
-  const locks = await getAccountLockedBalances(accountAddresses, block);
+  const [infos, locks] = await Promise.all([
+    getSystemAccountInfos(accountAddresses, block),
+    getAccountLockedBalances(accountAddresses, block),
+  ]);
 
   // prepare data structure
   const accountMap = accountAddresses.reduce((acc, accountAddress) => {

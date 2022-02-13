@@ -3,17 +3,17 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { CrowdloanCreatedEvent } from "../../types/events";
-import { ensureFund, ensureParachain } from "../../useCases";
+import { ensureCrowdloan, createOrUpdateParachain } from "../../useCases";
 import { timestampToDate } from "../../utils/common";
 
-type EventType = { fundId: number };
+type EventType = { chainId: number };
 
 export const createdHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block } = ctx;
-  const { fundId } = getEvent(ctx);
+  const { chainId } = getEvent(ctx);
 
-  await ensureParachain(fundId, store, block);
-  await ensureFund(fundId, store, block, {
+  await createOrUpdateParachain(store, chainId, block);
+  await ensureCrowdloan(chainId, store, block, {
     campaignCreateDate: timestampToDate(block),
   });
 };
@@ -21,5 +21,5 @@ export const createdHandler: EventHandler = async (ctx): Promise<void> => {
 const getEvent = (ctx: EventHandlerContext): EventType => {
   const event = new CrowdloanCreatedEvent(ctx);
 
-  return { fundId: event.asLatest };
+  return { chainId: event.asLatest };
 };

@@ -1,164 +1,217 @@
 import { Store, SubstrateBlock } from "@subsquid/substrate-processor";
 import { DeepPartial } from "typeorm";
-import { Chain, Crowdloan } from "../model";
-import { findById, upsert } from "./common";
+import { omit } from "lodash";
+import { Crowdloan } from "../model";
 import {
-  CrowdloanInfo,
+  findById,
+  insert,
+  insertAndReturn,
+  update,
+  updateAndReturn,
+} from "./common";
+import {
+  createAddress,
+  getBlockTimestampByHeight,
   getCrowdloanInfo,
-  getLastProcessedBlockNumber,
   getParachainInfo,
 } from "../services/apiCalls";
 import { convertAddressToSubstrate } from "../utils/addressConvertor";
-import { createOrUpdateKusamaAccount, getAccount } from "./account";
-import { createOrUpdateChain, getChain, getKusamaChain } from "./chain";
+import { getChain } from "./chain";
 import {
   createOrUpdateCrowdloanSequence,
   getCrowdloanSequence,
 } from "./crowdloanSequence";
-import { getKusamaToken } from "./token";
+import { getOrCreateKusamaToken } from "./token";
 import { timestampToDate } from "../utils/common";
+import { NotFoundError } from "../utils/errors";
 
 export const getCrowdloan = (
   store: Store,
   id: string
 ): Promise<Crowdloan | undefined> => findById(store, Crowdloan, id);
 
-export const createOrUpdateCrowdloan = (
+export function createCrowdloan(
   store: Store,
+  data: Crowdloan,
+  shouldReturn: true
+): Promise<Crowdloan>;
+export function createCrowdloan(store: Store, data: Crowdloan): Promise<void>;
+export function createCrowdloan(
+  store: Store,
+  data: Crowdloan,
+  shouldReturn?: boolean
+): Promise<Crowdloan | void> {
+  return (shouldReturn ? insertAndReturn : insert)(store, Crowdloan, data);
+}
+
+export function updateCrowdloanById(
+  store: Store,
+  id: string,
+  data: DeepPartial<Crowdloan>,
+  shouldReturn: true
+): Promise<Crowdloan>;
+export function updateCrowdloanById(
+  store: Store,
+  id: string,
   data: DeepPartial<Crowdloan>
-): Promise<Crowdloan> => upsert(store, Crowdloan, data);
-
-export const ensureParachain = async (
-  parachainId: number,
+): Promise<void>;
+export function updateCrowdloanById(
   store: Store,
-  block: SubstrateBlock
-): Promise<Chain> => {
-  const chain = await getChain(store, parachainId);
+  id: string,
+  data: DeepPartial<Crowdloan>,
+  shouldReturn?: boolean
+): Promise<Crowdloan | void> {
+  return (shouldReturn ? updateAndReturn : update)(
+    store,
+    Crowdloan,
+    { id },
+    omit(data, "id")
+  );
+}
 
-  return createOrUpdateChain(store, {
-    id: `${parachainId}`,
-    nativeToken: await getKusamaToken(store),
-    name: "",
-    relayId: await getKusamaChain(store).then(({ id }) => id),
-    relayChain: false,
-    ...(chain ? {} : { registeredAt: timestampToDate(block) }),
-  });
-};
-
-const getIsReCreateCrowdloan = async (
-  crowdloanId: string,
-  store: Store
-): Promise<boolean> => {
-  const crowdloan = await getCrowdloan(store, crowdloanId);
-
-  return !!(crowdloan?.dissolve && crowdloan?.won);
-};
-
+/** Mutate CrowdloanSequence */
 export const getLatestCrowdloanId = async (
-  crowdloanSequenceId: string,
   store: Store,
+  parachainId: number, // must be equal to parachainId
   block: SubstrateBlock
 ): Promise<string> => {
-  const curBlockNum = await getLastProcessedBlockNumber(block);
+  // const crowdloanSequenceId = `${parachainId}`;
+  const crowdloanSequenceId = await getParachainIdWithManager(
+    parachainId,
+    block,
+    store
+  );
 
-  const crowdloanSequence = await getCrowdloanSequence(
+  let crowdloanSequence = await getCrowdloanSequence(
     store,
     crowdloanSequenceId
   );
-
-  if (crowdloanSequence) {
-    const crowdloanIndex = crowdloanSequence.curIndex;
-    const isReCreateCrowdloan = await getIsReCreateCrowdloan(
-      `${crowdloanSequenceId}-${crowdloanIndex}`,
-      store
+  if (!crowdloanSequence) {
+    crowdloanSequence = await createOrUpdateCrowdloanSequence(store, {
+      id: crowdloanSequenceId,
+      curIndex: 0,
+      createdAt: timestampToDate(block),
+      blockNum: block.height,
+    });
+  } else {
+    const currentIndex = crowdloanSequence.curIndex;
+    const crowdloan = await getCrowdloan(
+      store,
+      `${crowdloanSequenceId}-${currentIndex}`
     );
-    let currentIndex = crowdloanIndex;
-    if (isReCreateCrowdloan) {
-      currentIndex = crowdloanIndex + 1;
-      crowdloanSequence.curIndex = currentIndex;
-      crowdloanSequence.blockNum = curBlockNum;
-      await store.save(crowdloanSequence);
-    }
+    const shouldReCreateCrowdloan = !!(
+      crowdloan?.won ||
+      crowdloan?.dissolvedDate ||
+      crowdloan?.dissolve
+    );
 
-    return `${crowdloanSequenceId}-${currentIndex}`;
+    if (shouldReCreateCrowdloan) {
+      crowdloanSequence = await createOrUpdateCrowdloanSequence(store, {
+        id: crowdloanSequenceId,
+        curIndex: currentIndex + 1,
+        blockNum: block.height,
+      });
+    }
   }
 
-  const crowdloan = await createOrUpdateCrowdloanSequence(store, {
-    id: crowdloanSequenceId,
-    curIndex: 0,
-    createdAt: timestampToDate(block),
-    blockNum: curBlockNum,
-  });
-
-  await store.save(crowdloan);
-  return `${crowdloanSequenceId}-0`;
+  return `${crowdloanSequenceId}-${crowdloanSequence.curIndex}`;
 };
 
-const getParachainId = async (paraId: number, block: SubstrateBlock) => {
-  let { manager } = (await getParachainInfo(paraId, block)) || {};
-  manager = convertAddressToSubstrate(manager || "");
-  return `${paraId}-${manager || ""}`;
+const getParachainIdWithManager = async (
+  paraId: number,
+  block: SubstrateBlock,
+  store: Store
+) => {
+  const parachainInfo = await getParachainInfo(store, paraId, block);
+  return `${paraId}-${
+    parachainInfo?.manager
+      ? convertAddressToSubstrate(parachainInfo?.manager || "")
+      : ""
+  }`;
 };
 
-export const ensureFund = async (
+export const ensureCrowdloan = async (
   parachainId: number,
   store: Store,
   block: SubstrateBlock,
-  modifier?: Partial<Crowdloan>
-): Promise<Crowdloan> => {
-  const fund = await getCrowdloanInfo(parachainId, block);
-  const parachainWithManagerId = await getParachainId(parachainId, block);
-  const parachain = await getChain(store, parachainId);
-
-  const crowdloanId = await getLatestCrowdloanId(
-    parachainWithManagerId,
-    store,
-    block
-  );
-  const {
-    cap,
-    end,
-    trieIndex,
-    raised,
-    lastContribution,
-    firstPeriod,
-    lastPeriod,
-    depositor,
-    verifier,
-    ...rest
-  } = fund || ({} as CrowdloanInfo);
-
-  const depositorAccount =
-    (await getAccount(store, depositor)) ||
-    (await createOrUpdateKusamaAccount(store, depositor));
-
-  const verifierAccount = verifier.sr25519
-    ? (await getAccount(store, verifier.sr25519)) ||
-      (await createOrUpdateKusamaAccount(store, verifier.sr25519))
-    : null;
-
-  // TODO: Change after we integrate multiple tokens
-  const token = await getKusamaToken(store);
+  modifier?: Pick<
+    Partial<Crowdloan>,
+    | "campaignCreateDate"
+    | "campaignEndDate"
+    | "won"
+    | "dissolve"
+    | "dissolvedDate"
+    | "auctionNumber"
+    | "leaseEnd"
+    | "leaseStart"
+  >
+): Promise<Crowdloan | undefined> => {
+  const crowdloanId = await getLatestCrowdloanId(store, parachainId, block);
 
   const crowdloan = await getCrowdloan(store, crowdloanId);
-  // todo; think about splitting logic here for insert and update functions
-  return createOrUpdateCrowdloan(
+
+  if (crowdloan) {
+    const { cap, end } = await getCrowdloanInfo(store, parachainId, block);
+    const leaseEndTimestamp = await getBlockTimestampByHeight(store, end);
+
+    return updateCrowdloanById(
+      store,
+      crowdloan.id,
+      {
+        ...crowdloan,
+        leaseEnd: leaseEndTimestamp ? new Date(leaseEndTimestamp) : null,
+        cap: cap || crowdloan.cap,
+        ...modifier,
+      },
+      true
+    );
+  }
+
+  // TODO: Change after we integrate multiple tokens
+  const token = await getOrCreateKusamaToken(store);
+  const parachain = await getChain(store, parachainId);
+
+  if (!parachain) {
+    throw new NotFoundError("Parachain", { parachainId });
+  }
+
+  const { cap, firstPeriod, lastPeriod, end } = await getCrowdloanInfo(
     store,
-    crowdloan
-      ? {
-          ...crowdloan,
-          cap: cap || crowdloan.cap,
-          ...modifier,
-        }
-      : {
-          id: crowdloanId,
-          para: parachain,
-          token,
-          slotStart: firstPeriod,
-          slotEnd: lastPeriod,
-          cap,
-          ...rest,
-          ...modifier,
-        }
+    parachainId,
+    block
   );
+
+  const leaseEndTimestamp = await getBlockTimestampByHeight(store, end);
+
+  return createCrowdloan(
+    store,
+    {
+      id: crowdloanId,
+      para: parachain,
+      token,
+      slotStart: firstPeriod,
+      slotEnd: lastPeriod,
+      cap,
+      campaignCreateDate: timestampToDate(block),
+      won: false,
+      dissolve: false,
+      leaseEnd: leaseEndTimestamp ? new Date(leaseEndTimestamp) : null,
+      contributions: [],
+      campaignEndDate: null,
+      dissolvedDate: null,
+      auctionNumber: null,
+      leaseStart: null,
+      ...modifier,
+    },
+    true
+  );
+};
+
+export const getIsCrowdloanAddress = async (
+  address: string
+): Promise<boolean> => {
+  const hexStr = await createAddress(address);
+  return Buffer.from(hexStr.slice(4, 28), "hex")
+    .toString()
+    .startsWith("modlpy/cfund");
 };

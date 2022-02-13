@@ -1,14 +1,8 @@
 import { Store } from "@subsquid/substrate-processor";
-import { DeepPartial } from "typeorm";
 import { Contribution } from "../model";
-import { findById, upsert } from "./common";
+import { insert } from "./common";
 
-export const getContribution = (
+export const createContribution = (
   store: Store,
-  id: string
-): Promise<Contribution | undefined> => findById(store, Contribution, id);
-
-export const createOrUpdateContribution = (
-  store: Store,
-  data: DeepPartial<Contribution>
-): Promise<Contribution> => upsert(store, Contribution, data);
+  data: Contribution
+): Promise<void> => insert(store, Contribution, data);

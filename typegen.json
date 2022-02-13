@@ -22,11 +22,8 @@
     "auctions.AuctionClosed",
     "auctions.WinningOffset",
     "auctions.BidAccepted",
-    "auctions.Reserved",
-    "auctions.Unreserved",
 
     "slots.Leased",
-    "slots.NewLeasePeriod",
 
     "crowdloan.Created",
     "crowdloan.Contributed",

@@ -3,19 +3,29 @@ import { FirstOfRpcBatchBlock, FirstOfRpcBatchBlockRowId } from "../model";
 import { findById, upsert } from "./common";
 import { timestampToDate } from "../utils/common";
 
-export const getFirstOfRpcBatchBlock = (
+let cache: FirstOfRpcBatchBlock | undefined;
+
+export const getFirstOfRpcBatchBlock = async (
   store: Store
 ): Promise<FirstOfRpcBatchBlock | undefined> => {
-  return findById(store, FirstOfRpcBatchBlock, FirstOfRpcBatchBlockRowId.block);
+  if (!cache) {
+    cache = await findById(
+      store,
+      FirstOfRpcBatchBlock,
+      FirstOfRpcBatchBlockRowId.block
+    );
+  }
+  return cache;
 };
 
-export const createOrUpdateFirstOfRpcBatchBlock = (
+export const createOrUpdateFirstOfRpcBatchBlock = async (
   store: Store,
   block: SubstrateBlock
-) => {
-  return upsert(store, FirstOfRpcBatchBlock, {
+): Promise<FirstOfRpcBatchBlock> => {
+  cache = await upsert(store, FirstOfRpcBatchBlock, {
     id: FirstOfRpcBatchBlockRowId.block,
     height: block.height,
     timestamp: timestampToDate(block),
   });
+  return cache;
 };
