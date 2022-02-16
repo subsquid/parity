@@ -120,7 +120,7 @@ export const callRpcMulti = async <Args extends unknown[], Response>(
   { path }: IRpcFunctionItem
 ): Promise<Response[]> => {
   const startTime = new Date();
-  const logExecution = () => {
+  const logExecuted = () => {
     console.log(
       `Function [${path}] was called ${queries.length} times and took ${
         new Date().valueOf() - startTime.valueOf()
@@ -128,13 +128,14 @@ export const callRpcMulti = async <Args extends unknown[], Response>(
     );
   };
 
+  console.log(`Call function [${path}] for [${queries.length}] queries.`);
   return getRpcMulti<Args, Response>(apiService, queries)
     .then((result) => {
-      logExecution();
+      logExecuted();
       return result;
     })
     .catch((error) => {
-      logExecution();
+      logExecuted();
       throw error;
     });
 };

@@ -17,7 +17,7 @@ import {
   logMethodExecutionEnd,
   logMethodExecutionStart,
 } from "./useCases/debugMethodExecutionTime";
-import { addAuctionEventHandlers } from "./mapping/Auction";
+import { addAuctionEventHandlers } from "./mapping/Auctions";
 import { addSlotsEventsHandlers } from "./mapping/Slots";
 import { addCrowdloanEventsHandlers } from "./mapping/Crowdloan";
 

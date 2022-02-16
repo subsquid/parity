@@ -25,7 +25,8 @@ export const leasedHandler: EventHandler = async (ctx): Promise<void> => {
   const chronicle = await getChronicle(store);
 
   if (!chronicle?.currentAuction) {
-    throw new NotFoundError("Auction");
+    // It is possible, to enter this event handler BEFORE an auction created. So, just skip it.
+    return;
   }
 
   if (await getIsCrowdloanAddress(leaser)) {

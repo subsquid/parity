@@ -31,7 +31,7 @@ export const getChain = async (
   return chain;
 };
 
-export const createOrUpdateChain = (
+const createOrUpdateChain = (
   store: Store,
   data: DeepPartial<Chain>
 ): Promise<Chain> => upsert(store, Chain, data);

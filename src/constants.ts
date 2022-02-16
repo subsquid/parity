@@ -15,6 +15,9 @@ export const STASH_FILES = [
   "8000-9050.json",
 ];
 
+// ??
+export const IGNORE_PARACHAIN_IDS = [100, 110, 120, 1];
+
 export const KUSAMA_TOKEN_DETAILS = {
   id: "2",
   // tokenSymbol: "KSM",
@@ -46,7 +49,7 @@ export const START_FROM_BLOCK = 1;
 export const PROCESSOR_BATCH_SIZE = 500;
 
 export const BALANCES_RPC_BLOCK_CHUNK_SIZE = 500;
-export const BALANCES_RPC_PER_BATCH = 3;
+export const BALANCES_RPC_PER_BATCH = 10;
 export const BALANCES_RPC_BLOCK_HEIGHT_OFFSET = 300;
 export const BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET = 24 * 60 * 60 * 1000; // 1 day in ms
 
