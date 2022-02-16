@@ -30,7 +30,7 @@ type EventType = {
 };
 /**
  *
- * @param substrateEvent SubstrateEvent
+ * @param ctx EventHandlerContext
  * Create Bid record and create auction parachain record if not exists already
  * Skip winning bid before we have query abilities
  */

@@ -14,7 +14,7 @@
     // https://basarat.gitbooks.io/typescript/docs/tips/defaultIsBad.html
     "import/prefer-default-export": "off",
     "import/no-default-export": "error",
-//    "import/no-cycle": "off",
+    // "import/no-cycle": "off",
     "max-classes-per-file": ["error", 5],
     // Don't forget debugs
     "no-console": "off",
