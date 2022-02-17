@@ -3,6 +3,7 @@ import { DeepPartial } from "typeorm";
 import { omit } from "lodash";
 import { Crowdloan } from "../model";
 import {
+  findByCriteria,
   findById,
   insert,
   insertAndReturn,
@@ -29,6 +30,12 @@ export const getCrowdloan = (
   store: Store,
   id: string
 ): Promise<Crowdloan | undefined> => findById(store, Crowdloan, id);
+
+export const getCrowdloanByParachainId = (
+  store: Store,
+  parachainId: string
+): Promise<Crowdloan | undefined> =>
+  findByCriteria(store, Crowdloan, { where: { para: { id: parachainId } } });
 
 export function createCrowdloan(
   store: Store,

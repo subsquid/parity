@@ -84,7 +84,7 @@ export const update = async <T>(
 ): Promise<void> => {
   const updateResult = await store.update(EntityConstructor, criteria, data);
   if (!updateResult.affected) {
-    throw new NotFoundError(EntityConstructor.constructor.name, { criteria });
+    throw new NotFoundError(EntityConstructor.name, { criteria });
   }
 };
 

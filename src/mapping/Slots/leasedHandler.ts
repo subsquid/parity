@@ -5,7 +5,11 @@ import {
 import { SlotsLeasedEvent } from "../../types/events";
 import { AccountAddress } from "../../customTypes";
 import { toKusamaFormat } from "../../utils/addressConvertor";
-import { getIsCrowdloanAddress, updateCrowdloanById } from "../../useCases";
+import {
+  getCrowdloanByParachainId,
+  getIsCrowdloanAddress,
+  updateCrowdloanById,
+} from "../../useCases";
 import { getChronicle } from "../../useCases/cronicle";
 import { getBlockTimestampByHeight } from "../../services/apiCalls";
 
@@ -30,7 +34,12 @@ export const leasedHandler: EventHandler = async (ctx): Promise<void> => {
   }
 
   if (await getIsCrowdloanAddress(leaser)) {
-    await updateCrowdloanById(store, `${parachainId}`, {
+    const crowdloan = await getCrowdloanByParachainId(store, `${parachainId}`);
+    if (!crowdloan) {
+      return;
+    }
+
+    await updateCrowdloanById(store, crowdloan?.id, {
       auctionNumber: +chronicle.currentAuction.id,
       leaseEnd: chronicle.currentAuction.leaseEnd
         ? await getBlockTimestampByHeight(
