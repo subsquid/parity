@@ -7,7 +7,7 @@ import { AccountAddress } from "../../customTypes";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { getIsCrowdloanAddress, updateCrowdloanById } from "../../useCases";
 import { getChronicle } from "../../useCases/cronicle";
-import { NotFoundError } from "../../utils/errors";
+import { getBlockTimestampByHeight } from "../../services/apiCalls";
 
 type EventType = {
   parachainId: number;
@@ -32,7 +32,12 @@ export const leasedHandler: EventHandler = async (ctx): Promise<void> => {
   if (await getIsCrowdloanAddress(leaser)) {
     await updateCrowdloanById(store, `${parachainId}`, {
       auctionNumber: +chronicle.currentAuction.id,
-      leaseEnd: chronicle.currentAuction.leaseEnd,
+      leaseEnd: chronicle.currentAuction.leaseEnd
+        ? await getBlockTimestampByHeight(
+            store,
+            chronicle.currentAuction.leaseEnd
+          )
+        : null,
     });
   }
 };
