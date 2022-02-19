@@ -47,7 +47,7 @@ export const bidAcceptedHandler: EventHandler = async (ctx): Promise<void> => {
   }
 
   const auctionId = auction.id;
-  const isCrowdloan = await getIsCrowdloanAddress(accountId);
+  const isCrowdloan = await getIsCrowdloanAddress(store, accountId);
   const parachain = await createOrUpdateParachain(store, paraId, block);
 
   const crowdloanId = await getLatestCrowdloanId(store, +parachain.id, block);

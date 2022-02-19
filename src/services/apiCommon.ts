@@ -175,6 +175,7 @@ export const checkRpcAvailability = (
 
 export const calculateCacheKey = (options: {
   rpcFunction?: string;
+  localFunction?: string;
   blockHash?: BlockHash | string;
   args?: Array<unknown>;
 }): string => {

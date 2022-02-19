@@ -33,7 +33,7 @@ export const leasedHandler: EventHandler = async (ctx): Promise<void> => {
     return;
   }
 
-  if (await getIsCrowdloanAddress(leaser)) {
+  if (await getIsCrowdloanAddress(store, leaser)) {
     const crowdloan = await getCrowdloanByParachainId(store, `${parachainId}`);
     if (!crowdloan) {
       return;

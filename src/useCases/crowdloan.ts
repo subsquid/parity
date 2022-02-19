@@ -1,6 +1,6 @@
 import { Store, SubstrateBlock } from "@subsquid/substrate-processor";
 import { DeepPartial } from "typeorm";
-import { omit } from "lodash";
+import _, { omit } from "lodash";
 import { Crowdloan } from "../model";
 import {
   findByCriteria,
@@ -25,6 +25,8 @@ import {
 import { getOrCreateKusamaToken } from "./token";
 import { timestampToDate } from "../utils/common";
 import { NotFoundError } from "../utils/errors";
+import { DbCacheAccessor } from "../utils/DbCacheAccessor";
+import { calculateCacheKey } from "../services/apiCommon";
 
 export const getCrowdloan = (
   store: Store,
@@ -215,10 +217,22 @@ export const ensureCrowdloan = async (
 };
 
 export const getIsCrowdloanAddress = async (
+  store: Store,
   address: string
 ): Promise<boolean> => {
-  const hexStr = await createAddress(address);
-  return Buffer.from(hexStr.slice(4, 28), "hex")
-    .toString()
-    .startsWith("modlpy/cfund");
+  const cacheKey = calculateCacheKey({
+    localFunction: "getIsCrowdloanAddress",
+    args: [address],
+  });
+  const dbCacheAccessor = new DbCacheAccessor<boolean>(store, cacheKey);
+  const cachedValue = await dbCacheAccessor.getValue(cacheKey);
+  if (_.isNil(cachedValue)) {
+    const hexStr = await createAddress(address);
+    const isCrowdloanAddress = Buffer.from(hexStr.slice(4, 28), "hex")
+      .toString()
+      .startsWith("modlpy/cfund");
+    await dbCacheAccessor.setValue(cacheKey, isCrowdloanAddress, 0);
+    return isCrowdloanAddress;
+  }
+  return cachedValue.value;
 };
