@@ -19,7 +19,7 @@ export const unreservedHandler: EventHandler = async (ctx): Promise<void> => {
 const getEvent = (ctx: EventHandlerContext): EventType => {
   const event = new BalancesUnreservedEvent(ctx);
 
-  if (event.asV2008) {
+  if (event.isV2008) {
     const [who, amount] = event.asV2008;
     return { who: toKusamaFormat(who), amount };
   }
