@@ -46,7 +46,7 @@ export enum LockId {
 }
 
 export const START_FROM_BLOCK = 1;
-export const PROCESSOR_BATCH_SIZE = 500;
+export const PROCESSOR_BATCH_SIZE = 200;
 
 export const BALANCES_RPC_BLOCK_CHUNK_SIZE = 500;
 export const BALANCES_RPC_PER_BATCH = 10;

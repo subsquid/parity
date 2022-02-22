@@ -4,6 +4,7 @@ import { FindManyOptions } from "typeorm/find-options/FindManyOptions";
 import { ObjectID } from "typeorm/driver/mongodb/typings";
 import { FindConditions } from "typeorm/find-options/FindConditions";
 import { FindOneOptions } from "typeorm/find-options/FindOneOptions";
+import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import { NotFoundError } from "../utils/errors";
 
 export const findById = <T>(
@@ -82,7 +83,11 @@ export const update = async <T>(
   criteria: FindConditions<T>,
   data: DeepPartial<T>
 ): Promise<void> => {
-  const updateResult = await store.update(EntityConstructor, criteria, data);
+  const updateResult = await store.update(
+    EntityConstructor,
+    criteria,
+    data as QueryDeepPartialEntity<T>
+  );
   if (!updateResult.affected) {
     throw new NotFoundError(EntityConstructor.name, { criteria });
   }
