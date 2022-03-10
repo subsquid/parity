@@ -47,6 +47,7 @@ export const leasedHandler: EventHandler = async (ctx): Promise<void> => {
             chronicle.currentAuction.leaseEnd
           )
         : null,
+      won: true,
     });
   }
 };

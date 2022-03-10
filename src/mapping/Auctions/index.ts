@@ -22,6 +22,6 @@ export const addAuctionEventHandlers = (
     auctionStartedHandler
   );
   processor.addEventHandler(AuctionEvents.AuctionClosed, auctionClosedHandler);
-  processor.addEventHandler(AuctionEvents.BidAccepted, bidAcceptedHandler);
-  processor.addEventHandler(AuctionEvents.WinningOffset, winningOffsetHandler);
+  // processor.addEventHandler(AuctionEvents.BidAccepted, bidAcceptedHandler);
+  // processor.addEventHandler(AuctionEvents.WinningOffset, winningOffsetHandler);
 };
