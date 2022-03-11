@@ -31,7 +31,7 @@ processor.setDataSource({
   chain: CHAIN_NODE,
 });
 
-processor.setBlockRange({ from: 7513582, to: 11664706 });
+processor.setBlockRange({ from: START_FROM_BLOCK });
 
 const patchProcessor = (substrateProcessor: SubstrateProcessor) => {
   const oldAddEventHandler =
@@ -58,13 +58,13 @@ const patchProcessor = (substrateProcessor: SubstrateProcessor) => {
 // patchProcessor(processor);
 
 addAuctionEventHandlers(processor);
-// addCrowdloanEventsHandlers(processor);
-// addRegistrarEventsHandlers(processor);
+addCrowdloanEventsHandlers(processor);
+addRegistrarEventsHandlers(processor);
 addSlotsEventsHandlers(processor);
 
-// addBalancesEventHandlers(processor);
-// addStakingEventHandlers(processor);
-// addVestingEventHandlers(processor);
+addBalancesEventHandlers(processor);
+addStakingEventHandlers(processor);
+addVestingEventHandlers(processor);
 processor.addPreHook(loadGenesisData);
 
 processor.run();
