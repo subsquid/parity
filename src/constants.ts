@@ -2,7 +2,7 @@ import { WsProvider } from "@polkadot/api";
 
 // export const CHAIN_NODE = "wss://kusama-rpc.polkadot.io";
 export const CHAIN_NODE =
-  "wss://rpc.pinknode.io/kusama/59813174-7e9b-4da6-be8c-96b93648e51a";
+  "wss://rpc.pinknode.io/kusama/fbd4570c-612e-472d-9fd6-cc0cf6f2f5c9";
 export const INDEXER_ENDPOINT_URL =
   "https://kusama.indexer.gc.subsquid.io/v4/graphql";
 
@@ -45,7 +45,7 @@ export enum LockId {
   vesting = "vesting",
 }
 
-export const START_FROM_BLOCK = 1;
+export const START_FROM_BLOCK = 8000000;
 export const PROCESSOR_BATCH_SIZE = 200;
 
 export const BALANCES_RPC_BLOCK_CHUNK_SIZE = 500;
