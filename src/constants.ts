@@ -1,7 +1,8 @@
 import { WsProvider } from "@polkadot/api";
 
-export const CHAIN_NODE = "wss://kusama-rpc.polkadot.io";
-// export const CHAIN_NODE = "wss://rpc.pinknode.io/kusama/59813174-7e9b-4da6-be8c-96b93648e51a";
+// export const CHAIN_NODE = "wss://kusama-rpc.polkadot.io";
+export const CHAIN_NODE =
+  "wss://rpc.pinknode.io/kusama/59813174-7e9b-4da6-be8c-96b93648e51a";
 export const INDEXER_ENDPOINT_URL =
   "https://kusama.indexer.gc.subsquid.io/v4/graphql";
 
