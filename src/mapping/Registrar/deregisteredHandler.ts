@@ -2,7 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { RegistrarDeregisteredEvent } from "../../types/events";
+import { RegistrarDeregisteredEvent } from "../../types/generated/events";
 import { getChain, updateChainById } from "../../useCases";
 import { timestampToDate } from "../../utils/common";
 

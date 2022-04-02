@@ -2,7 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { SlotsLeasedEvent } from "../../types/events";
+import { SlotsLeasedEvent } from "../../types/generated/events";
 import { AccountAddress } from "../../customTypes";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import {

@@ -3,7 +3,7 @@ import {
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
 import { v4 } from "uuid";
-import { BalancesTransferEvent } from "../../types/events";
+import { BalancesTransferEvent } from "../../types/generated/events";
 import {
   createTransfer,
   getOrCreateKusamaToken,

@@ -2,7 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { CrowdloanDissolvedEvent } from "../../types/events";
+import { CrowdloanDissolvedEvent } from "../../types/generated/events";
 import { timestampToDate } from "../../utils/common";
 import { ensureCrowdloan } from "../../useCases";
 

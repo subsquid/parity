@@ -2,7 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { BalancesUnreservedEvent } from "../../types/events";
+import { BalancesUnreservedEvent } from "../../types/generated/events";
 import { AccountAddress } from "../../customTypes";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { storeAccountAndUpdateBalances } from "../../useCases";

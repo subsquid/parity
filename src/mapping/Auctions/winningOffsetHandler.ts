@@ -2,7 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { AuctionsWinningOffsetEvent } from "../../types/events";
+import { AuctionsWinningOffsetEvent } from "../../types/generated/events";
 import { createOrUpdateAuction, getAuction } from "../../useCases/auction";
 import { NotFoundError } from "../../utils/errors";
 

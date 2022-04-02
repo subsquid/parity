@@ -2,8 +2,8 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { BalancesReserveRepatriatedEvent } from "../../types/events";
-import * as v9130 from "../../types/v9130";
+import { BalancesReserveRepatriatedEvent } from "../../types/generated/events";
+import * as v9130 from "../../types/generated/v9130";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { storeAccountAndUpdateBalances } from "../../useCases";
 

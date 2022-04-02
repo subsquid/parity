@@ -2,7 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { RegistrarRegisteredEvent } from "../../types/events";
+import { RegistrarRegisteredEvent } from "../../types/generated/events";
 import { AccountAddress } from "../../customTypes";
 import {
   createChain,

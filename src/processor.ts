@@ -1,7 +1,4 @@
-import {
-  EventHandler,
-  SubstrateProcessor,
-} from "@subsquid/substrate-processor";
+import { SubstrateProcessor } from "@subsquid/substrate-processor";
 import { addBalancesEventHandlers } from "./mapping";
 import { addRegistrarEventsHandlers } from "./mapping/Registrar";
 import { addStakingEventHandlers } from "./mapping/Staking";
@@ -13,10 +10,6 @@ import {
   PROCESSOR_BATCH_SIZE,
   START_FROM_BLOCK,
 } from "./constants";
-import {
-  logMethodExecutionEnd,
-  logMethodExecutionStart,
-} from "./useCases/debugMethodExecutionTime";
 import { addAuctionEventHandlers } from "./mapping/Auctions";
 import { addSlotsEventsHandlers } from "./mapping/Slots";
 import { addCrowdloanEventsHandlers } from "./mapping/Crowdloan";
@@ -33,30 +26,6 @@ processor.setDataSource({
 
 processor.setBlockRange({ from: START_FROM_BLOCK });
 
-const patchProcessor = (substrateProcessor: SubstrateProcessor) => {
-  const oldAddEventHandler =
-    substrateProcessor.addEventHandler.bind(substrateProcessor);
-  // @ts-ignore
-  substrateProcessor.addEventHandler = (
-    eventName: string,
-    fn: EventHandler
-  ) => {
-    oldAddEventHandler(eventName, (async (ctx) => {
-      await logMethodExecutionStart(ctx.store, ctx.block, fn.name);
-      const usageBefore = process.memoryUsage().heapUsed;
-      await fn(ctx);
-      const usageAfter = process.memoryUsage().heapUsed;
-      await logMethodExecutionEnd(
-        ctx.store,
-        fn.name,
-        ctx.block,
-        usageAfter - usageBefore
-      );
-    }) as EventHandler);
-  };
-};
-// patchProcessor(processor);
-
 addAuctionEventHandlers(processor);
 addCrowdloanEventsHandlers(processor);
 addRegistrarEventsHandlers(processor);
@@ -65,6 +34,6 @@ addSlotsEventsHandlers(processor);
 addBalancesEventHandlers(processor);
 addStakingEventHandlers(processor);
 addVestingEventHandlers(processor);
-processor.addPreHook(loadGenesisData);
+processor.addPreHook({ range: { from: 1, to: 1 } }, loadGenesisData);
 
 processor.run();

@@ -2,7 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { CrowdloanContributedEvent } from "../../types/events";
+import { CrowdloanContributedEvent } from "../../types/generated/events";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { AccountAddress } from "../../customTypes";
 import {

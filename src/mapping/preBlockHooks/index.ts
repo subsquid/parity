@@ -74,14 +74,7 @@ interface TimestampElement {
   timestamp: number;
 }
 
-let numberOfCalls = 0;
-
 export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
-  if (numberOfCalls) {
-    return;
-  }
-  numberOfCalls += 1;
-
   const { store } = ctx;
 
   const timestampJSON = JSON.parse(

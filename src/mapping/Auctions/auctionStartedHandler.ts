@@ -2,7 +2,7 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { AuctionsAuctionStartedEvent } from "../../types/events";
+import { AuctionsAuctionStartedEvent } from "../../types/generated/events";
 import { createOrUpdateAuction } from "../../useCases/auction";
 import { updateChronicle } from "../../useCases/cronicle";
 import {
