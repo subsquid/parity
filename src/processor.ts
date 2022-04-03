@@ -3,7 +3,7 @@ import { addBalancesEventHandlers } from "./mapping";
 import { addRegistrarEventsHandlers } from "./mapping/Registrar";
 import { addStakingEventHandlers } from "./mapping/Staking";
 import { addVestingEventHandlers } from "./mapping/Vesting";
-import { loadGenesisData } from "./mapping/preBlockHooks";
+import { initializeSquid } from "./mapping/preBlockHooks";
 import {
   CHAIN_NODE,
   INDEXER_ENDPOINT_URL,
@@ -13,6 +13,7 @@ import {
 import { addAuctionEventHandlers } from "./mapping/Auctions";
 import { addSlotsEventsHandlers } from "./mapping/Slots";
 import { addCrowdloanEventsHandlers } from "./mapping/Crowdloan";
+import { updateBalances } from "./useCases";
 
 const processor = new SubstrateProcessor("kusama_processor");
 
@@ -34,6 +35,7 @@ addSlotsEventsHandlers(processor);
 addBalancesEventHandlers(processor);
 addStakingEventHandlers(processor);
 addVestingEventHandlers(processor);
-processor.addPreHook({ range: { from: 1, to: 1 } }, loadGenesisData);
+processor.addPreHook({ range: { from: 1, to: 1 } }, initializeSquid);
+processor.addPreHook({ range: { from: 3000000 } }, updateBalances);
 
 processor.run();

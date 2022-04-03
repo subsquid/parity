@@ -44,13 +44,11 @@ export enum LockId {
   vesting = "vesting",
 }
 
-export const START_FROM_BLOCK = 8000000;
+export const START_FROM_BLOCK = 1;
 export const PROCESSOR_BATCH_SIZE = 200;
 
 export const BALANCES_RPC_BLOCK_CHUNK_SIZE = 500;
-export const BALANCES_RPC_PER_BATCH = 10;
-export const BALANCES_RPC_BLOCK_HEIGHT_OFFSET = 300;
-export const BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET = 8 * 60 * 60 * 1000; // each 8 hours
+export const BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET = 24 * 60 * 60 * 1000; // each 24 hours
 
 export enum RpcQueriesPath {
   systemAccountInfo = "query.system.account",

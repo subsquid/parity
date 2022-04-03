@@ -1,9 +1,10 @@
 import { Store } from "@subsquid/substrate-processor";
-import { DeepPartial } from "typeorm";
 import { HistoricalBalance } from "../model";
-import { upsert } from "./common";
+import { insert } from "./common";
 
-export const createOrUpdateHistoricalBalance = (
+export function createHistoricalBalance(
   store: Store,
-  data: DeepPartial<HistoricalBalance>
-): Promise<HistoricalBalance> => upsert(store, HistoricalBalance, data);
+  data: HistoricalBalance
+): Promise<HistoricalBalance | void> {
+  return insert(store, HistoricalBalance, data);
+}

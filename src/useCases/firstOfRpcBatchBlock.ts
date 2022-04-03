@@ -2,13 +2,19 @@ import { Store, SubstrateBlock } from "@subsquid/substrate-processor";
 import { FirstOfRpcBatchBlock, FirstOfRpcBatchBlockRowId } from "../model";
 import { findById, upsert } from "./common";
 import { timestampToDate } from "../utils/common";
+import { BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET } from "../constants";
 
 let cache: FirstOfRpcBatchBlock | undefined;
 
 export const getFirstOfRpcBatchBlock = async (
-  store: Store
+  store: Store,
+  block: SubstrateBlock
 ): Promise<FirstOfRpcBatchBlock | undefined> => {
-  if (!cache) {
+  if (
+    !cache ||
+    block.timestamp - cache.timestamp.valueOf() >=
+      BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET
+  ) {
     cache = await findById(
       store,
       FirstOfRpcBatchBlock,

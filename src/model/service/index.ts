@@ -6,4 +6,3 @@ export * from "./auctionParachain.model";
 export * from "./bid.model";
 export * from "./chronicle.model";
 export * from "./dbCache.model";
-export * from "./debugMethodExecutionTime.model";

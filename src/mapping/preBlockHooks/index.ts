@@ -1,7 +1,10 @@
 // Temporary work around till we see a solution
 // to work with different chains
 
-import { BlockHandler } from "@subsquid/substrate-processor";
+import {
+  BlockHandler,
+  BlockHandlerContext,
+} from "@subsquid/substrate-processor";
 import * as fs from "fs";
 import * as path from "path";
 import { STASH_FILES } from "../../constants";
@@ -120,8 +123,7 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
     );
   });
 
-  await initializeKusamaChain(store);
-  await initializeChronicle(store);
+  await initializeSquid({ store } as BlockHandlerContext);
 
   await Promise.all(
     newAccountData.map(async ({ address }) => {
@@ -132,4 +134,9 @@ export const loadGenesisData: BlockHandler = async (ctx): Promise<void> => {
     })
   );
   console.log("BlocksStash successfully processed.");
+};
+
+export const initializeSquid: BlockHandler = async ({ store }) => {
+  await initializeKusamaChain(store);
+  await initializeChronicle(store);
 };

@@ -1,5 +1,5 @@
-import * as ss58 from "@subsquid/ss58";
 import { SubstrateBlock } from "@subsquid/substrate-processor";
+import { networkRegistry } from "@subsquid/archive-registry";
 
 export const parseNumber = (hexOrNum: string | number | undefined): number => {
   if (!hexOrNum) {
@@ -15,10 +15,9 @@ export const timestampToDate = (block: SubstrateBlock): Date => {
 };
 
 export const getChainName = (chainId: number) => {
-  try {
-    // there are a lot of chains not listed in the registry
-    return ss58.registry.get(chainId).displayName;
-  } catch (error) {
-    return "";
-  }
+  return (
+    networkRegistry.networks.find(
+      ({ parachainId }) => parachainId && +parachainId === chainId
+    )?.displayName || ""
+  );
 };
