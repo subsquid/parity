@@ -39,14 +39,16 @@ export const leasedHandler: EventHandler = async (ctx): Promise<void> => {
       return;
     }
 
+    const leaseEndTimestamp = chronicle.currentAuction.leaseEnd
+      ? await getBlockTimestampByHeight(
+          store,
+          chronicle.currentAuction.leaseEnd
+        )
+      : null;
+
     await updateCrowdloanById(store, crowdloan?.id, {
       auctionNumber: +chronicle.currentAuction.id,
-      leaseEnd: chronicle.currentAuction.leaseEnd
-        ? await getBlockTimestampByHeight(
-            store,
-            chronicle.currentAuction.leaseEnd
-          )
-        : null,
+      leaseEnd: leaseEndTimestamp ? new Date(leaseEndTimestamp) : null,
       won: true,
     });
   }
