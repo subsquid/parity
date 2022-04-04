@@ -97,7 +97,7 @@ export const createOrUpdateParachain = async (
   return createOrUpdateChain(store, {
     id: `${chainId}`,
     nativeToken: chain?.nativeToken ?? (await getOrCreateKusamaToken(store)),
-    name: chain?.name || getChainName(chainId),
+    name: getChainName(chainId) || chain?.name,
     relayId:
       chain?.relayId ??
       (await getOrCreateKusamaChain(store).then(({ id }) => id)),

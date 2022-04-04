@@ -11,7 +11,7 @@ import {
   storeAccountAndUpdateBalances,
 } from "../../useCases";
 import { toKusamaFormat } from "../../utils/addressConvertor";
-import { timestampToDate } from "../../utils/common";
+import { getChainName, timestampToDate } from "../../utils/common";
 
 type EventType = { paraId: number; managerId: AccountAddress };
 
@@ -21,7 +21,7 @@ export const registeredHandler: EventHandler = async (ctx): Promise<void> => {
 
   await createChain(store, {
     id: `${paraId}`,
-    name: `${paraId}-${managerId}`,
+    name: getChainName(paraId) || `${paraId}-${managerId}`,
     relayChain: false,
     relayId: await getKusamaChainId(store),
     registeredAt: timestampToDate(block),
