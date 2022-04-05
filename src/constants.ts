@@ -6,16 +6,6 @@ export const INDEXER_ENDPOINT_URL =
   "https://kusama.indexer.gc.subsquid.io/v4/graphql";
 
 export const PROVIDER = new WsProvider(CHAIN_NODE);
-export const STASH_FILES = [
-  "0-1999.json",
-  "2000-3999.json",
-  "4000-5999.json",
-  "6000-7999.json",
-  "8000-9050.json",
-];
-
-// ??
-export const IGNORE_PARACHAIN_IDS = [100, 110, 120, 1];
 
 export const KUSAMA_TOKEN_DETAILS = {
   id: "2",
@@ -45,7 +35,7 @@ export enum LockId {
 }
 
 export const START_FROM_BLOCK = 1;
-export const PROCESSOR_BATCH_SIZE = 200;
+export const PROCESSOR_BATCH_SIZE = 100;
 
 export const BALANCES_RPC_BLOCK_CHUNK_SIZE = 500;
 export const BALANCES_RPC_BLOCK_TIMESTAMP_OFFSET = 24 * 60 * 60 * 1000; // each 24 hours
