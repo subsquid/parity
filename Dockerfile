@@ -24,7 +24,6 @@ COPY --from=deps /squid/package.json .
 COPY --from=deps /squid/package-lock.json .
 COPY --from=deps /squid/node_modules node_modules
 COPY --from=builder /squid/lib lib
-COPY blocksStash blocksStash/.
 ADD db db
 ADD schema.graphql .
 # TODO: use shorter PROMETHEUS_PORT
