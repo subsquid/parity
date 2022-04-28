@@ -3,6 +3,7 @@ import {EventContext, Result, deprecateLatest} from './support'
 import * as v2008 from './v2008'
 import * as v9122 from './v9122'
 import * as v9130 from './v9130'
+import * as v9160 from './v9160'
 
 export class AuctionsAuctionClosedEvent {
   constructor(private ctx: EventContext) {
@@ -98,6 +99,105 @@ export class AuctionsBidAcceptedEvent {
   }
 
   get asLatest(): [Uint8Array, number, bigint, number, number] {
+    deprecateLatest()
+    return this.asV9010
+  }
+}
+
+export class AuctionsReserveConfiscatedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'auctions.ReserveConfiscated')
+  }
+
+  /**
+   *  Someone attempted to lease the same slot twice for a parachain. The amount is held in reserve
+   *  but no parachain slot has been leased.
+   *  \[parachain_id, leaser, amount\]
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('auctions.ReserveConfiscated') === '491d5eb10503fbf716b3399d749f1a02c0a60c5f903a500a8ed4f9f98fd07f34'
+  }
+
+  /**
+   *  Someone attempted to lease the same slot twice for a parachain. The amount is held in reserve
+   *  but no parachain slot has been leased.
+   *  \[parachain_id, leaser, amount\]
+   */
+  get asV9010(): [number, Uint8Array, bigint] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9010
+  }
+
+  get asLatest(): [number, Uint8Array, bigint] {
+    deprecateLatest()
+    return this.asV9010
+  }
+}
+
+export class AuctionsReservedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'auctions.Reserved')
+  }
+
+  /**
+   *  Funds were reserved for a winning bid. First balance is the extra amount reserved.
+   *  Second is the total. [bidder, extra_reserved, total_amount]
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('auctions.Reserved') === '0f263bfdefa394edfb38d20d33662423a2e0902235b599f9b2b0292f157f0902'
+  }
+
+  /**
+   *  Funds were reserved for a winning bid. First balance is the extra amount reserved.
+   *  Second is the total. [bidder, extra_reserved, total_amount]
+   */
+  get asV9010(): [Uint8Array, bigint, bigint] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9010
+  }
+
+  get asLatest(): [Uint8Array, bigint, bigint] {
+    deprecateLatest()
+    return this.asV9010
+  }
+}
+
+export class AuctionsUnreservedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'auctions.Unreserved')
+  }
+
+  /**
+   *  Funds were unreserved since bidder is no longer active. [bidder, amount]
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('auctions.Unreserved') === '23bebce4ca9ed37548947d07d4dc50e772f07401b9a416b6aa2f3e9cb5adcaf4'
+  }
+
+  /**
+   *  Funds were unreserved since bidder is no longer active. [bidder, amount]
+   */
+  get asV9010(): [Uint8Array, bigint] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9010
+  }
+
+  get asLatest(): [Uint8Array, bigint] {
     deprecateLatest()
     return this.asV9010
   }
@@ -652,6 +752,83 @@ export class BalancesWithdrawEvent {
   }
 }
 
+export class BountiesBountyClaimedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'bounties.BountyClaimed')
+  }
+
+  /**
+   *  A bounty is claimed by beneficiary. \[index, payout, beneficiary\]
+   */
+  get isV2028(): boolean {
+    return this.ctx._chain.getEventHash('bounties.BountyClaimed') === '86708250ac506876b8d63d9c97b4ca0fa73f0199c633da6fb2a8956aaab8c743'
+  }
+
+  /**
+   *  A bounty is claimed by beneficiary. \[index, payout, beneficiary\]
+   */
+  get asV2028(): [number, bigint, Uint8Array] {
+    assert(this.isV2028)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A bounty is claimed by beneficiary.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('bounties.BountyClaimed') === 'fb4b26ccfabe9f649bfadde9c0bbee0816e9cf32c7384f2f21c03a852ec23f77'
+  }
+
+  /**
+   * A bounty is claimed by beneficiary.
+   */
+  get asV9130(): {index: number, payout: bigint, beneficiary: v9130.AccountId32} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {index: number, payout: bigint, beneficiary: v9130.AccountId32} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class ClaimsClaimedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'claims.Claimed')
+  }
+
+  /**
+   *  Someone claimed some DOTs.
+   */
+  get isV1020(): boolean {
+    return this.ctx._chain.getEventHash('claims.Claimed') === '317eeaadc76ca7d763e634bff31da2b98d72376d5e842a0cded1cf421e0694c1'
+  }
+
+  /**
+   *  Someone claimed some DOTs.
+   */
+  get asV1020(): [Uint8Array, Uint8Array, bigint] {
+    assert(this.isV1020)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV1020
+  }
+
+  get asLatest(): [Uint8Array, Uint8Array, bigint] {
+    deprecateLatest()
+    return this.asV1020
+  }
+}
+
 export class CrowdloanContributedEvent {
   constructor(private ctx: EventContext) {
     assert(this.ctx.event.name === 'crowdloan.Contributed')
@@ -745,6 +922,573 @@ export class CrowdloanDissolvedEvent {
   }
 }
 
+export class DemocracyPreimageNotedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'democracy.PreimageNoted')
+  }
+
+  /**
+   *  A proposal's preimage was noted, and the deposit taken.
+   */
+  get isV1022(): boolean {
+    return this.ctx._chain.getEventHash('democracy.PreimageNoted') === 'dad2bcdca357505fa3c7832085d0db53ce6f902bd9f5b52823ee8791d351872c'
+  }
+
+  /**
+   *  A proposal's preimage was noted, and the deposit taken.
+   */
+  get asV1022(): [Uint8Array, Uint8Array, bigint] {
+    assert(this.isV1022)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A proposal's preimage was noted, and the deposit taken.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('democracy.PreimageNoted') === 'd070eaca902e57d242e4f2fcf32e1044fe909d807ce0a0303e2bb45499fc9748'
+  }
+
+  /**
+   * A proposal's preimage was noted, and the deposit taken.
+   */
+  get asV9130(): {proposalHash: v9130.H256, who: v9130.AccountId32, deposit: bigint} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {proposalHash: v9130.H256, who: v9130.AccountId32, deposit: bigint} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class DemocracyPreimageReapedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'democracy.PreimageReaped')
+  }
+
+  /**
+   *  A registered preimage was removed and the deposit collected by the reaper (last item).
+   */
+  get isV1022(): boolean {
+    return this.ctx._chain.getEventHash('democracy.PreimageReaped') === 'b60e8c24758d2dae6f1d75c508a3141a304f756181262747ee8d704bd555ac86'
+  }
+
+  /**
+   *  A registered preimage was removed and the deposit collected by the reaper (last item).
+   */
+  get asV1022(): [Uint8Array, Uint8Array, bigint, Uint8Array] {
+    assert(this.isV1022)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A registered preimage was removed and the deposit collected by the reaper.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('democracy.PreimageReaped') === '3140454b0dfcc8f9c1ccda6a2fe7f5153f3d34c52e1e5bb1d954b96b8f5dd4a5'
+  }
+
+  /**
+   * A registered preimage was removed and the deposit collected by the reaper.
+   */
+  get asV9130(): {proposalHash: v9130.H256, provider: v9130.AccountId32, deposit: bigint, reaper: v9130.AccountId32} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {proposalHash: v9130.H256, provider: v9130.AccountId32, deposit: bigint, reaper: v9130.AccountId32} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class DemocracyPreimageUsedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'democracy.PreimageUsed')
+  }
+
+  /**
+   *  A proposal preimage was removed and used (the deposit was returned).
+   */
+  get isV1022(): boolean {
+    return this.ctx._chain.getEventHash('democracy.PreimageUsed') === 'dad2bcdca357505fa3c7832085d0db53ce6f902bd9f5b52823ee8791d351872c'
+  }
+
+  /**
+   *  A proposal preimage was removed and used (the deposit was returned).
+   */
+  get asV1022(): [Uint8Array, Uint8Array, bigint] {
+    assert(this.isV1022)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A proposal preimage was removed and used (the deposit was returned).
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('democracy.PreimageUsed') === '7b28a71d659ed286affdbc9e835b253b80485e4b3be08d04bfb153f8f8cc5241'
+  }
+
+  /**
+   * A proposal preimage was removed and used (the deposit was returned).
+   */
+  get asV9130(): {proposalHash: v9130.H256, provider: v9130.AccountId32, deposit: bigint} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {proposalHash: v9130.H256, provider: v9130.AccountId32, deposit: bigint} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class DemocracyTabledEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'democracy.Tabled')
+  }
+
+  get isV1020(): boolean {
+    return this.ctx._chain.getEventHash('democracy.Tabled') === '21f3d10122d183ae1df61d3456ae07c362a2e0cdffab1829f4febb4f7b53f6bd'
+  }
+
+  get asV1020(): [number, bigint, Uint8Array[]] {
+    assert(this.isV1020)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A public proposal has been tabled for referendum vote.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('democracy.Tabled') === 'a13f0b4abdda616a48f0910930f31ca5c2a2a8068c5289a35d395475289bd1e0'
+  }
+
+  /**
+   * A public proposal has been tabled for referendum vote.
+   */
+  get asV9130(): {proposalIndex: number, deposit: bigint, depositors: v9130.AccountId32[]} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {proposalIndex: number, deposit: bigint, depositors: v9130.AccountId32[]} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class DemocracyVotedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'democracy.Voted')
+  }
+
+  /**
+   * An account has voted in a referendum
+   */
+  get isV9160(): boolean {
+    return this.ctx._chain.getEventHash('democracy.Voted') === '1f7c6893e642faadc0fb2681a07f3aa74579a935cb93e932ab8fd8a9e9fe739c'
+  }
+
+  /**
+   * An account has voted in a referendum
+   */
+  get asV9160(): {voter: v9160.AccountId32, refIndex: number, vote: v9160.AccountVote} {
+    assert(this.isV9160)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9160
+  }
+
+  get asLatest(): {voter: v9160.AccountId32, refIndex: number, vote: v9160.AccountVote} {
+    deprecateLatest()
+    return this.asV9160
+  }
+}
+
+export class GiltBidPlacedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'gilt.BidPlaced')
+  }
+
+  /**
+   *  A bid was successfully placed.
+   *  \[ who, amount, duration \]
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('gilt.BidPlaced') === '08cc21c0d68ca514760f97888105328fe1685d191a70eb2254c1c645212a936f'
+  }
+
+  /**
+   *  A bid was successfully placed.
+   *  \[ who, amount, duration \]
+   */
+  get asV9010(): [Uint8Array, bigint, number] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A bid was successfully placed.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('gilt.BidPlaced') === 'b0947d8bc923fc2ba8237446323e8743314725badadc7ac334aa68f07643660e'
+  }
+
+  /**
+   * A bid was successfully placed.
+   */
+  get asV9130(): {who: v9130.AccountId32, amount: bigint, duration: number} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {who: v9130.AccountId32, amount: bigint, duration: number} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class GiltBidRetractedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'gilt.BidRetracted')
+  }
+
+  /**
+   *  A bid was successfully removed (before being accepted as a gilt).
+   *  \[ who, amount, duration \]
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('gilt.BidRetracted') === '08cc21c0d68ca514760f97888105328fe1685d191a70eb2254c1c645212a936f'
+  }
+
+  /**
+   *  A bid was successfully removed (before being accepted as a gilt).
+   *  \[ who, amount, duration \]
+   */
+  get asV9010(): [Uint8Array, bigint, number] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A bid was successfully removed (before being accepted as a gilt).
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('gilt.BidRetracted') === 'b0947d8bc923fc2ba8237446323e8743314725badadc7ac334aa68f07643660e'
+  }
+
+  /**
+   * A bid was successfully removed (before being accepted as a gilt).
+   */
+  get asV9130(): {who: v9130.AccountId32, amount: bigint, duration: number} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {who: v9130.AccountId32, amount: bigint, duration: number} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class GiltGiltIssuedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'gilt.GiltIssued')
+  }
+
+  /**
+   *  A bid was accepted as a gilt. The balance may not be released until expiry.
+   *  \[ index, expiry, who, amount \]
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('gilt.GiltIssued') === '97e60976bee393feead863d4db334e2f5008070d4a412ad40b086fbc17a2b3b0'
+  }
+
+  /**
+   *  A bid was accepted as a gilt. The balance may not be released until expiry.
+   *  \[ index, expiry, who, amount \]
+   */
+  get asV9010(): [number, number, Uint8Array, bigint] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A bid was accepted as a gilt. The balance may not be released until expiry.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('gilt.GiltIssued') === 'ec1cbb54fa1459d43188e9bbc3b223b26154c76f0281cc7d9622206cb75a5c62'
+  }
+
+  /**
+   * A bid was accepted as a gilt. The balance may not be released until expiry.
+   */
+  get asV9130(): {index: number, expiry: number, who: v9130.AccountId32, amount: bigint} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {index: number, expiry: number, who: v9130.AccountId32, amount: bigint} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class GiltGiltThawedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'gilt.GiltThawed')
+  }
+
+  /**
+   *  An expired gilt has been thawed.
+   *  \[ index, who, original_amount, additional_amount \]
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('gilt.GiltThawed') === '509fd6bf05af1312163727733b94afe6ea0234cd120ac7f53d4cf765e8c50e51'
+  }
+
+  /**
+   *  An expired gilt has been thawed.
+   *  \[ index, who, original_amount, additional_amount \]
+   */
+  get asV9010(): [number, Uint8Array, bigint, bigint] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * An expired gilt has been thawed.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('gilt.GiltThawed') === '4722172baa4d49b3d196e98d87b787a7919032efd393cb88c3db7c84159a3233'
+  }
+
+  /**
+   * An expired gilt has been thawed.
+   */
+  get asV9130(): {index: number, who: v9130.AccountId32, originalAmount: bigint, additionalAmount: bigint} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {index: number, who: v9130.AccountId32, originalAmount: bigint, additionalAmount: bigint} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class PhragmenElectionCandidateSlashedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'phragmenElection.CandidateSlashed')
+  }
+
+  /**
+   *  A \[candidate\] was slashed by \[amount\] due to failing to obtain a seat as member or
+   *  runner-up.
+   * 
+   *  Note that old members and runners-up are also candidates.
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('phragmenElection.CandidateSlashed') === '23bebce4ca9ed37548947d07d4dc50e772f07401b9a416b6aa2f3e9cb5adcaf4'
+  }
+
+  /**
+   *  A \[candidate\] was slashed by \[amount\] due to failing to obtain a seat as member or
+   *  runner-up.
+   * 
+   *  Note that old members and runners-up are also candidates.
+   */
+  get asV9010(): [Uint8Array, bigint] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A candidate was slashed by amount due to failing to obtain a seat as member or
+   * runner-up.
+   * 
+   * Note that old members and runners-up are also candidates.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('phragmenElection.CandidateSlashed') === 'a64270141b7a7c84c0950e5dcd31bc284b27b39505d278ff519f44f855ee33d8'
+  }
+
+  /**
+   * A candidate was slashed by amount due to failing to obtain a seat as member or
+   * runner-up.
+   * 
+   * Note that old members and runners-up are also candidates.
+   */
+  get asV9130(): {candidate: v9130.AccountId32, amount: bigint} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {candidate: v9130.AccountId32, amount: bigint} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class PhragmenElectionNewTermEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'phragmenElection.NewTerm')
+  }
+
+  /**
+   *  A new term with \[new_members\]. This indicates that enough candidates existed to run
+   *  the election, not that enough have has been elected. The inner value must be examined
+   *  for this purpose. A `NewTerm(\[\])` indicates that some candidates got their bond
+   *  slashed and none were elected, whilst `EmptyTerm` means that no candidates existed to
+   *  begin with.
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('phragmenElection.NewTerm') === 'd7a45cf0fb3b6c39f6db66d04bddff68afaa850200debf915801414eda809fe1'
+  }
+
+  /**
+   *  A new term with \[new_members\]. This indicates that enough candidates existed to run
+   *  the election, not that enough have has been elected. The inner value must be examined
+   *  for this purpose. A `NewTerm(\[\])` indicates that some candidates got their bond
+   *  slashed and none were elected, whilst `EmptyTerm` means that no candidates existed to
+   *  begin with.
+   */
+  get asV9010(): [Uint8Array, bigint][] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A new term with new_members. This indicates that enough candidates existed to run
+   * the election, not that enough have has been elected. The inner value must be examined
+   * for this purpose. A `NewTerm(\[\])` indicates that some candidates got their bond
+   * slashed and none were elected, whilst `EmptyTerm` means that no candidates existed to
+   * begin with.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('phragmenElection.NewTerm') === 'c26c6ac673ee46db2001722c75880df159f382274469750dc468b868c6f738c8'
+  }
+
+  /**
+   * A new term with new_members. This indicates that enough candidates existed to run
+   * the election, not that enough have has been elected. The inner value must be examined
+   * for this purpose. A `NewTerm(\[\])` indicates that some candidates got their bond
+   * slashed and none were elected, whilst `EmptyTerm` means that no candidates existed to
+   * begin with.
+   */
+  get asV9130(): {newMembers: [v9130.AccountId32, bigint][]} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {newMembers: [v9130.AccountId32, bigint][]} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
+export class PhragmenElectionSeatHolderSlashedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'phragmenElection.SeatHolderSlashed')
+  }
+
+  /**
+   *  A \[seat holder\] was slashed by \[amount\] by being forcefully removed from the set.
+   */
+  get isV9010(): boolean {
+    return this.ctx._chain.getEventHash('phragmenElection.SeatHolderSlashed') === '23bebce4ca9ed37548947d07d4dc50e772f07401b9a416b6aa2f3e9cb5adcaf4'
+  }
+
+  /**
+   *  A \[seat holder\] was slashed by \[amount\] by being forcefully removed from the set.
+   */
+  get asV9010(): [Uint8Array, bigint] {
+    assert(this.isV9010)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A seat holder was slashed by amount by being forcefully removed from the set.
+   */
+  get isV9130(): boolean {
+    return this.ctx._chain.getEventHash('phragmenElection.SeatHolderSlashed') === '7a1552e3cb4a3dc87408db4d42391f3a98998bb0e6bf70aa82661919c4d12eaa'
+  }
+
+  /**
+   * A seat holder was slashed by amount by being forcefully removed from the set.
+   */
+  get asV9130(): {seatHolder: v9130.AccountId32, amount: bigint} {
+    assert(this.isV9130)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9130
+  }
+
+  get asLatest(): {seatHolder: v9130.AccountId32, amount: bigint} {
+    deprecateLatest()
+    return this.asV9130
+  }
+}
+
 export class RegistrarDeregisteredEvent {
   constructor(private ctx: EventContext) {
     assert(this.ctx.event.name === 'registrar.Deregistered')
@@ -830,6 +1574,336 @@ export class SlotsLeasedEvent {
   }
 }
 
+export class SocietyAutoUnbidEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'society.AutoUnbid')
+  }
+
+  /**
+   *  A candidate was dropped (due to an excess of bids in the system).
+   */
+  get isV1040(): boolean {
+    return this.ctx._chain.getEventHash('society.AutoUnbid') === '21ea0c8f2488eafafdea1de92b54cd17d8b1caff525e37616abf0ff93f11531d'
+  }
+
+  /**
+   *  A candidate was dropped (due to an excess of bids in the system).
+   */
+  get asV1040(): Uint8Array {
+    assert(this.isV1040)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A candidate was dropped (due to an excess of bids in the system).
+   */
+  get isV9160(): boolean {
+    return this.ctx._chain.getEventHash('society.AutoUnbid') === '3628b3aba77dce2d54e6db67e810eccf17921a84b907aea8b90a342fd5ad6c01'
+  }
+
+  /**
+   * A candidate was dropped (due to an excess of bids in the system).
+   */
+  get asV9160(): {candidate: v9160.AccountId32} {
+    assert(this.isV9160)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9160
+  }
+
+  get asLatest(): {candidate: v9160.AccountId32} {
+    deprecateLatest()
+    return this.asV9160
+  }
+}
+
+export class SocietyBidEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'society.Bid')
+  }
+
+  /**
+   *  A membership bid just happened. The given account is the candidate's ID and their offer
+   *  is the second.
+   */
+  get isV1040(): boolean {
+    return this.ctx._chain.getEventHash('society.Bid') === '23bebce4ca9ed37548947d07d4dc50e772f07401b9a416b6aa2f3e9cb5adcaf4'
+  }
+
+  /**
+   *  A membership bid just happened. The given account is the candidate's ID and their offer
+   *  is the second.
+   */
+  get asV1040(): [Uint8Array, bigint] {
+    assert(this.isV1040)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A membership bid just happened. The given account is the candidate's ID and their offer
+   * is the second.
+   */
+  get isV9160(): boolean {
+    return this.ctx._chain.getEventHash('society.Bid') === '55a5fb0e9330bf9b92555951744ee4781deef686d68f1f5342c04d98998cc77c'
+  }
+
+  /**
+   * A membership bid just happened. The given account is the candidate's ID and their offer
+   * is the second.
+   */
+  get asV9160(): {candidateId: v9160.AccountId32, offer: bigint} {
+    assert(this.isV9160)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9160
+  }
+
+  get asLatest(): {candidateId: v9160.AccountId32, offer: bigint} {
+    deprecateLatest()
+    return this.asV9160
+  }
+}
+
+export class SocietyDefenderVoteEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'society.DefenderVote')
+  }
+
+  /**
+   *  A vote has been placed for a defending member (voter, vote)
+   */
+  get isV1040(): boolean {
+    return this.ctx._chain.getEventHash('society.DefenderVote') === '3e84284a56e2d90e928c790a4788cf7ee237d5a6d76716a3e8584e3dcc0319a0'
+  }
+
+  /**
+   *  A vote has been placed for a defending member (voter, vote)
+   */
+  get asV1040(): [Uint8Array, boolean] {
+    assert(this.isV1040)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A vote has been placed for a defending member
+   */
+  get isV9160(): boolean {
+    return this.ctx._chain.getEventHash('society.DefenderVote') === '5611f54cf7fe8fff6eeebdd5aef829508eb29477f36591cfba061d2a40b126f6'
+  }
+
+  /**
+   * A vote has been placed for a defending member
+   */
+  get asV9160(): {voter: v9160.AccountId32, vote: boolean} {
+    assert(this.isV9160)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9160
+  }
+
+  get asLatest(): {voter: v9160.AccountId32, vote: boolean} {
+    deprecateLatest()
+    return this.asV9160
+  }
+}
+
+export class SocietyUnbidEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'society.Unbid')
+  }
+
+  /**
+   *  A candidate was dropped (by their request).
+   */
+  get isV1040(): boolean {
+    return this.ctx._chain.getEventHash('society.Unbid') === '21ea0c8f2488eafafdea1de92b54cd17d8b1caff525e37616abf0ff93f11531d'
+  }
+
+  /**
+   *  A candidate was dropped (by their request).
+   */
+  get asV1040(): Uint8Array {
+    assert(this.isV1040)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A candidate was dropped (by their request).
+   */
+  get isV9160(): boolean {
+    return this.ctx._chain.getEventHash('society.Unbid') === '3628b3aba77dce2d54e6db67e810eccf17921a84b907aea8b90a342fd5ad6c01'
+  }
+
+  /**
+   * A candidate was dropped (by their request).
+   */
+  get asV9160(): {candidate: v9160.AccountId32} {
+    assert(this.isV9160)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9160
+  }
+
+  get asLatest(): {candidate: v9160.AccountId32} {
+    deprecateLatest()
+    return this.asV9160
+  }
+}
+
+export class SocietyUnvouchEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'society.Unvouch')
+  }
+
+  /**
+   *  A candidate was dropped (by request of who vouched for them).
+   */
+  get isV1040(): boolean {
+    return this.ctx._chain.getEventHash('society.Unvouch') === '21ea0c8f2488eafafdea1de92b54cd17d8b1caff525e37616abf0ff93f11531d'
+  }
+
+  /**
+   *  A candidate was dropped (by request of who vouched for them).
+   */
+  get asV1040(): Uint8Array {
+    assert(this.isV1040)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A candidate was dropped (by request of who vouched for them).
+   */
+  get isV9160(): boolean {
+    return this.ctx._chain.getEventHash('society.Unvouch') === '3628b3aba77dce2d54e6db67e810eccf17921a84b907aea8b90a342fd5ad6c01'
+  }
+
+  /**
+   * A candidate was dropped (by request of who vouched for them).
+   */
+  get asV9160(): {candidate: v9160.AccountId32} {
+    assert(this.isV9160)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9160
+  }
+
+  get asLatest(): {candidate: v9160.AccountId32} {
+    deprecateLatest()
+    return this.asV9160
+  }
+}
+
+export class SocietyVoteEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'society.Vote')
+  }
+
+  /**
+   *  A vote has been placed (candidate, voter, vote)
+   */
+  get isV1040(): boolean {
+    return this.ctx._chain.getEventHash('society.Vote') === '297b1f9e3b7548d06cf345489141d90d9466aaad07e61033eb31d21c1babe5af'
+  }
+
+  /**
+   *  A vote has been placed (candidate, voter, vote)
+   */
+  get asV1040(): [Uint8Array, Uint8Array, boolean] {
+    assert(this.isV1040)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A vote has been placed
+   */
+  get isV9160(): boolean {
+    return this.ctx._chain.getEventHash('society.Vote') === 'df0f0229341c8156a83fb471719b61cb6b9f060d57ec812d12284101c1a833ab'
+  }
+
+  /**
+   * A vote has been placed
+   */
+  get asV9160(): {candidate: v9160.AccountId32, voter: v9160.AccountId32, vote: boolean} {
+    assert(this.isV9160)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9160
+  }
+
+  get asLatest(): {candidate: v9160.AccountId32, voter: v9160.AccountId32, vote: boolean} {
+    deprecateLatest()
+    return this.asV9160
+  }
+}
+
+export class SocietyVouchEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'society.Vouch')
+  }
+
+  /**
+   *  A membership bid just happened by vouching. The given account is the candidate's ID and
+   *  their offer is the second. The vouching party is the third.
+   */
+  get isV1040(): boolean {
+    return this.ctx._chain.getEventHash('society.Vouch') === 'e5d45092dcac17c8173e3bc8fe6865f6fdfb171b3440a9bf9279ca36b62c16f9'
+  }
+
+  /**
+   *  A membership bid just happened by vouching. The given account is the candidate's ID and
+   *  their offer is the second. The vouching party is the third.
+   */
+  get asV1040(): [Uint8Array, bigint, Uint8Array] {
+    assert(this.isV1040)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  /**
+   * A membership bid just happened by vouching. The given account is the candidate's ID and
+   * their offer is the second. The vouching party is the third.
+   */
+  get isV9160(): boolean {
+    return this.ctx._chain.getEventHash('society.Vouch') === '9f01d73716aabbe4dba848916c9e8e8c0b6175dfdf49d0b6465f62c1f8943392'
+  }
+
+  /**
+   * A membership bid just happened by vouching. The given account is the candidate's ID and
+   * their offer is the second. The vouching party is the third.
+   */
+  get asV9160(): {candidateId: v9160.AccountId32, offer: bigint, vouching: v9160.AccountId32} {
+    assert(this.isV9160)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9160
+  }
+
+  get asLatest(): {candidateId: v9160.AccountId32, offer: bigint, vouching: v9160.AccountId32} {
+    deprecateLatest()
+    return this.asV9160
+  }
+}
+
 export class StakingBondedEvent {
   constructor(private ctx: EventContext) {
     assert(this.ctx.event.name === 'staking.Bonded')
@@ -864,6 +1938,101 @@ export class StakingBondedEvent {
   get asLatest(): [Uint8Array, bigint] {
     deprecateLatest()
     return this.asV1051
+  }
+}
+
+export class StakingChilledEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'staking.Chilled')
+  }
+
+  /**
+   *  An account has stopped participating as either a validator or nominator.
+   *  \[stash\]
+   */
+  get isV9090(): boolean {
+    return this.ctx._chain.getEventHash('staking.Chilled') === '21ea0c8f2488eafafdea1de92b54cd17d8b1caff525e37616abf0ff93f11531d'
+  }
+
+  /**
+   *  An account has stopped participating as either a validator or nominator.
+   *  \[stash\]
+   */
+  get asV9090(): Uint8Array {
+    assert(this.isV9090)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9090
+  }
+
+  get asLatest(): Uint8Array {
+    deprecateLatest()
+    return this.asV9090
+  }
+}
+
+export class StakingKickedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'staking.Kicked')
+  }
+
+  /**
+   *  A nominator has been kicked from a validator. \[nominator, stash\]
+   */
+  get isV2028(): boolean {
+    return this.ctx._chain.getEventHash('staking.Kicked') === 'e54ae910805a8a9413af1a7f5885a5d0ba5f4e105175cd6b0ce2a8702ddf1861'
+  }
+
+  /**
+   *  A nominator has been kicked from a validator. \[nominator, stash\]
+   */
+  get asV2028(): [Uint8Array, Uint8Array] {
+    assert(this.isV2028)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV2028
+  }
+
+  get asLatest(): [Uint8Array, Uint8Array] {
+    deprecateLatest()
+    return this.asV2028
+  }
+}
+
+export class StakingPayoutStartedEvent {
+  constructor(private ctx: EventContext) {
+    assert(this.ctx.event.name === 'staking.PayoutStarted')
+  }
+
+  /**
+   *  The stakers' rewards are getting paid. \[era_index, validator_stash\]
+   */
+  get isV9090(): boolean {
+    return this.ctx._chain.getEventHash('staking.PayoutStarted') === '0379562584d6426ccff49705dfa9dba95ad94215b772fd97d0ad0c4ca0001c12'
+  }
+
+  /**
+   *  The stakers' rewards are getting paid. \[era_index, validator_stash\]
+   */
+  get asV9090(): [number, Uint8Array] {
+    assert(this.isV9090)
+    return this.ctx._chain.decodeEvent(this.ctx.event)
+  }
+
+  get isLatest(): boolean {
+    deprecateLatest()
+    return this.isV9090
+  }
+
+  get asLatest(): [number, Uint8Array] {
+    deprecateLatest()
+    return this.asV9090
   }
 }
 

@@ -5,7 +5,7 @@ import {
 import { VestingVestingCompletedEvent } from "../../types/generated/events";
 import { AccountAddress } from "../../customTypes";
 import { toKusamaFormat } from "../../utils/addressConvertor";
-import { storeAccountAndUpdateBalances } from "../../useCases";
+import { storeAccountToUpdateBalances } from "../../useCases";
 
 type EventType = { account: AccountAddress };
 
@@ -15,7 +15,7 @@ export const vestingCompletedHandler: EventHandler = async (
   const { store, block } = ctx;
   const { account } = getEvent(ctx);
 
-  await storeAccountAndUpdateBalances(store, block, [account]);
+  await storeAccountToUpdateBalances(store, block, [account]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

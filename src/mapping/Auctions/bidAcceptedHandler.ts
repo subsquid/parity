@@ -10,7 +10,7 @@ import {
   getCrowdloan,
   getIsCrowdloanAddress,
   getLatestCrowdloanId,
-  storeAccountAndUpdateBalances,
+  storeAccountToUpdateBalances,
 } from "../../useCases";
 import { timestampToDate } from "../../utils/common";
 import { createOrUpdateBid } from "../../useCases/bid";
@@ -83,7 +83,7 @@ export const bidAcceptedHandler: EventHandler = async (ctx): Promise<void> => {
       blockNum: block.height,
     });
   }
-  await storeAccountAndUpdateBalances(store, block, [accountId]);
+  await storeAccountToUpdateBalances(store, block, [accountId]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

@@ -23,6 +23,7 @@ type Account @entity {
     balance: Balance
     historicalBalances: [HistoricalBalance] @derivedFrom(field: "account")
     contributions: [Contribution] @derivedFrom(field: "account")
+    isHolder: Boolean!
 }
 
 type Transfer @entity {

@@ -5,7 +5,7 @@ import {
 import { StakingSlashedEvent } from "../../types/generated/events";
 import { AccountAddress } from "../../customTypes";
 import { toKusamaFormat } from "../../utils/addressConvertor";
-import { storeAccountAndUpdateBalances } from "../../useCases";
+import { storeAccountToUpdateBalances } from "../../useCases";
 
 type EventType = { validator: AccountAddress; amount: bigint };
 
@@ -13,7 +13,7 @@ export const slashedHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block } = ctx;
   const { validator } = getEvent(ctx);
 
-  await storeAccountAndUpdateBalances(store, block, [validator]);
+  await storeAccountToUpdateBalances(store, block, [validator]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

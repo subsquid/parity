@@ -1,12 +1,18 @@
 import { Store } from "@subsquid/substrate-processor";
 import { DeepPartial } from "typeorm";
 import { Account, Chain } from "../model";
-import { upsert } from "./common";
+import { update, upsert } from "./common";
 import {
   convertAddressToKusama,
   convertAddressToSubstrate,
 } from "../utils/addressConvertor";
 import { getOrCreateKusamaChain } from "./chain";
+
+export const updateAccount = (
+  store: Store,
+  id: string,
+  data: DeepPartial<Account>
+): Promise<void> => update(store, Account, { id }, data);
 
 export const createOrUpdateAccount = (
   store: Store,
@@ -26,5 +32,6 @@ export const createOrUpdateKusamaAccount = async (
     chain: accountChain,
     // todo; check if substrate account is really in substrate format
     substrateAccount: convertAddressToSubstrate(kusamaAccountAddress),
+    isHolder: false,
   });
 };

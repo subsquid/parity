@@ -8,7 +8,7 @@ import {
   createChain,
   getKusamaChainId,
   getOrCreateKusamaToken,
-  storeAccountAndUpdateBalances,
+  storeAccountToUpdateBalances,
 } from "../../useCases";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { getChainName, timestampToDate } from "../../utils/common";
@@ -30,7 +30,7 @@ export const registeredHandler: EventHandler = async (ctx): Promise<void> => {
     crowdloans: [],
   });
 
-  await storeAccountAndUpdateBalances(store, block, [managerId]);
+  await storeAccountToUpdateBalances(store, block, [managerId]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

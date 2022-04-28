@@ -5,14 +5,14 @@ import {
 import { BalancesDepositEvent } from "../../types/generated/events";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { AccountAddress } from "../../customTypes";
-import { storeAccountAndUpdateBalances } from "../../useCases";
+import { storeAccountToUpdateBalances } from "../../useCases";
 
 type DepositEventType = { who: AccountAddress; amount: bigint };
 
 export const depositHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block } = ctx;
   const { who } = getDepositEvent(ctx);
-  await storeAccountAndUpdateBalances(store, block, [who]);
+  await storeAccountToUpdateBalances(store, block, [who]);
 };
 
 const getDepositEvent = (ctx: EventHandlerContext): DepositEventType => {

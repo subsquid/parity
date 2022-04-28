@@ -5,7 +5,7 @@ import {
 import { BalancesReserveRepatriatedEvent } from "../../types/generated/events";
 import * as v9130 from "../../types/generated/v9130";
 import { toKusamaFormat } from "../../utils/addressConvertor";
-import { storeAccountAndUpdateBalances } from "../../useCases";
+import { storeAccountToUpdateBalances } from "../../useCases";
 
 type EventType = {
   from: string;
@@ -20,7 +20,7 @@ export const reserveRepatriatedHandler: EventHandler = async (
   const { block, store } = ctx;
   const { from, to } = getEvent(ctx);
 
-  await storeAccountAndUpdateBalances(store, block, [from, to]);
+  await storeAccountToUpdateBalances(store, block, [from, to]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

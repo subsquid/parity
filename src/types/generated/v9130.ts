@@ -11,3 +11,5 @@ export interface BalanceStatus_Free {
 export interface BalanceStatus_Reserved {
   __kind: 'Reserved'
 }
+
+export type H256 = Uint8Array

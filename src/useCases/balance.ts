@@ -28,7 +28,7 @@ import {
   createOrUpdateFirstOfRpcBatchBlock,
   getFirstOfRpcBatchBlock,
 } from "./firstOfRpcBatchBlock";
-import { createOrUpdateAccount } from "./account";
+import { createOrUpdateAccount, updateAccount } from "./account";
 import { timestampToDate } from "../utils/common";
 import { getOrCreateKusamaToken } from "./token";
 import { createHistoricalBalance } from "./historicalBalance";
@@ -54,7 +54,7 @@ export const createOrUpdateBalance = (
  * store them in the temporal storage;
  * update balances for them every 100 blocks;
  * */
-export const storeAccountAndUpdateBalances = async (
+export const storeAccountToUpdateBalances = async (
   store: Store,
   block: SubstrateBlock,
   accountAddresses: AccountAddress[] // in Kusama format only!
@@ -68,6 +68,7 @@ export const storeAccountAndUpdateBalances = async (
         id: accountAddress,
         chain: kusamaChain,
         substrateAccount: convertAddressToSubstrate(accountAddress),
+        isHolder: false,
       })
     )
   );
@@ -149,6 +150,18 @@ export const updateBalances = async ({
                 ...accountBalances,
               });
             }
+
+            await updateAccount(store, account.id, {
+              isHolder: !!(
+                balance?.reservedBalance ||
+                balance?.freeBalance ||
+                balance?.lockedBalance ||
+                balance?.bondedBalance ||
+                balance?.vestedBalance ||
+                balance?.democracyBalance ||
+                balance?.electionBalance
+              ),
+            });
           }
         )
       );

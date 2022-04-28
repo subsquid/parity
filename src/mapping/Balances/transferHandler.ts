@@ -7,7 +7,7 @@ import { BalancesTransferEvent } from "../../types/generated/events";
 import {
   createTransfer,
   getOrCreateKusamaToken,
-  storeAccountAndUpdateBalances,
+  storeAccountToUpdateBalances,
 } from "../../useCases";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { AccountAddress } from "../../customTypes";
@@ -23,7 +23,7 @@ export const transferHandler: EventHandler = async (ctx) => {
   const { store, block } = ctx;
   const { from, to, amount } = getTransferEvent(ctx);
 
-  const [accountFrom, accountTo] = await storeAccountAndUpdateBalances(
+  const [accountFrom, accountTo] = await storeAccountToUpdateBalances(
     store,
     block,
     [from, to]

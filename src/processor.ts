@@ -14,6 +14,12 @@ import { addAuctionEventHandlers } from "./mapping/Auctions";
 import { addSlotsEventsHandlers } from "./mapping/Slots";
 import { addCrowdloanEventsHandlers } from "./mapping/Crowdloan";
 import { updateBalances } from "./useCases";
+import { addBountiesEventsHandlers } from "./mapping/Bounties";
+import { addClaimedEventsHandlers } from "./mapping/Claims";
+import { addDemocracyEventsHandlers } from "./mapping/Democracy";
+import { addSocietyEventsHandlers } from "./mapping/Society";
+import { addPhragmenElectionEventsHandlers } from "./mapping/PhragmenElection";
+import { addGiltEventsHandlers } from "./mapping/Gilt";
 
 const processor = new SubstrateProcessor("kusama_processor");
 
@@ -35,6 +41,13 @@ addSlotsEventsHandlers(processor);
 addBalancesEventHandlers(processor);
 addStakingEventHandlers(processor);
 addVestingEventHandlers(processor);
+addBountiesEventsHandlers(processor);
+addClaimedEventsHandlers(processor);
+addDemocracyEventsHandlers(processor);
+addSocietyEventsHandlers(processor);
+addPhragmenElectionEventsHandlers(processor);
+addGiltEventsHandlers(processor);
+
 processor.addPreHook({ range: { from: 1, to: 1 } }, initializeSquid);
 processor.addPreHook({ range: { from: 3000000 } }, updateBalances);
 

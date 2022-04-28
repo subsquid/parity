@@ -5,7 +5,7 @@ import {
 import { StakingRewardedEvent } from "../../types/generated/events";
 import { AccountAddress } from "../../customTypes";
 import { toKusamaFormat } from "../../utils/addressConvertor";
-import { storeAccountAndUpdateBalances } from "../../useCases";
+import { storeAccountToUpdateBalances } from "../../useCases";
 
 type EventType = { address: AccountAddress; amount: bigint };
 
@@ -13,7 +13,7 @@ export const rewardedHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block } = ctx;
   const { address } = getEvent(ctx);
 
-  await storeAccountAndUpdateBalances(store, block, [address]);
+  await storeAccountToUpdateBalances(store, block, [address]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

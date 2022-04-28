@@ -5,7 +5,7 @@ import {
 import { BalancesDustLostEvent } from "../../types/generated/events";
 import { toKusamaFormat } from "../../utils/addressConvertor";
 import { AccountAddress } from "../../customTypes";
-import { storeAccountAndUpdateBalances } from "../../useCases";
+import { storeAccountToUpdateBalances } from "../../useCases";
 
 type EventType = { account: AccountAddress; amount: bigint };
 
@@ -13,7 +13,7 @@ export const dustLostHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block } = ctx;
   const { account } = getEvent(ctx);
 
-  await storeAccountAndUpdateBalances(store, block, [account]);
+  await storeAccountToUpdateBalances(store, block, [account]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

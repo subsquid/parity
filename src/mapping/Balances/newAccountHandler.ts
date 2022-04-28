@@ -5,7 +5,7 @@ import {
 import { BalancesNewAccountEvent } from "../../types/generated/events";
 import { AccountAddress } from "../../customTypes";
 import { toKusamaFormat } from "../../utils/addressConvertor";
-import { storeAccountAndUpdateBalances } from "../../useCases";
+import { storeAccountToUpdateBalances } from "../../useCases";
 
 type EventType = { account: AccountAddress; balance: bigint };
 
@@ -13,7 +13,7 @@ export const newAccountHandler: EventHandler = async (ctx): Promise<void> => {
   const { block, store } = ctx;
   const { account } = getEvent(ctx);
 
-  await storeAccountAndUpdateBalances(store, block, [account]);
+  await storeAccountToUpdateBalances(store, block, [account]);
 };
 
 const getEvent = (ctx: EventHandlerContext): EventType => {

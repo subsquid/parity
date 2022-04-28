@@ -36,4 +36,7 @@ export class Account {
 
   @OneToMany_(() => Contribution, e => e.account)
   contributions!: Contribution[]
+
+  @Column_("bool", {nullable: false})
+  isHolder!: boolean
 }

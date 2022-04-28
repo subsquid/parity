@@ -6,22 +6,25 @@
     "registrar.Registered",
     "registrar.Deregistered",
 
-    "balances.NewAccount",
-    "balances.Transfer",
     "balances.Endowed",
     "balances.DustLost",
+    "balances.Transfer",
+    "balances.BalanceSet",
     "balances.Reserved",
     "balances.Unreserved",
     "balances.ReserveRepatriated",
     "balances.Deposit",
     "balances.Withdraw",
     "balances.Slashed",
-    "balances.BalanceSet",
+    "balances.NewAccount",
 
     "auctions.AuctionStarted",
     "auctions.AuctionClosed",
-    "auctions.WinningOffset",
+    "auctions.Reserved",
+    "auctions.Unreserved",
+    "auctions.ReserveConfiscated",
     "auctions.BidAccepted",
+    "auctions.WinningOffset",
 
     "slots.Leased",
 
@@ -34,6 +37,32 @@
     "staking.Slashed",
     "staking.Unbonded",
     "staking.Withdrawn",
+    "staking.Kicked",
+    "staking.Chilled",
+    "staking.PayoutStarted",
+
+    "society.Bid",
+    "society.Vouch",
+    "society.AutoUnbid",
+    "society.Unbid",
+    "society.Unvouch",
+    "society.Vote",
+    "society.DefenderVote",
+
+    "gilt.BidPlaced",
+    "gilt.BidRetracted",
+    "gilt.GiltIssued",
+    "gilt.GiltThawed",
+
+    "democracy.Tabled",
+    "democracy.PreimageNoted",
+    "democracy.PreimageUsed",
+    "democracy.PreimageReaped",
+    "democracy.Voted",
+
+    "claims.Claimed",
+
+    "bounties.BountyClaimed",
 
     "vesting.VestingUpdated",
     "vesting.VestingCompleted"

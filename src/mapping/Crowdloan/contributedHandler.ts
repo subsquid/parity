@@ -8,7 +8,7 @@ import { AccountAddress } from "../../customTypes";
 import {
   createContribution,
   ensureCrowdloan,
-  storeAccountAndUpdateBalances,
+  storeAccountToUpdateBalances,
 } from "../../useCases";
 import { timestampToDate } from "../../utils/common";
 import { NotFoundError } from "../../utils/errors";
@@ -19,7 +19,7 @@ export const contributedHandler: EventHandler = async (ctx): Promise<void> => {
   const { store, block, event } = ctx;
   const { who, parachainId, amount } = getEvent(ctx);
 
-  const [account] = await storeAccountAndUpdateBalances(store, block, [who]);
+  const [account] = await storeAccountToUpdateBalances(store, block, [who]);
 
   if (!account) {
     throw new NotFoundError("Account", { address: who });
