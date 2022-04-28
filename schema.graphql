@@ -31,8 +31,9 @@ type Transfer @entity {
     senderAccount: Account!
     receiverAccount: Account!
     token: Token!
-    amount: BigInt!
+    amount: BigInt
     timestamp: DateTime!
+    successful: Boolean
 }
 
 type Balance @entity {

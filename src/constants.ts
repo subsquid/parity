@@ -22,6 +22,9 @@ export const KUSAMA_CHAIN_DETAILS = {
   registeredAt: new Date("2019-11-28Z17:27:54"), // remake it to rpc call
 };
 
+export const EXTRINSIC_SUCCESS = "system.ExtrinsicSuccess";
+export const EXTRINSIC_FAILED = "system.ExtrinsicFailed";
+
 export enum AuctionStatus {
   Started = "Started",
   Closed = "Closed",

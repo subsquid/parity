@@ -20,6 +20,7 @@ import { addDemocracyEventsHandlers } from "./mapping/Democracy";
 import { addSocietyEventsHandlers } from "./mapping/Society";
 import { addPhragmenElectionEventsHandlers } from "./mapping/PhragmenElection";
 import { addGiltEventsHandlers } from "./mapping/Gilt";
+import { addBalancesCallsHandlers } from "./mapping/Balances/calls";
 
 const processor = new SubstrateProcessor("kusama_processor");
 
@@ -47,6 +48,8 @@ addDemocracyEventsHandlers(processor);
 addSocietyEventsHandlers(processor);
 addPhragmenElectionEventsHandlers(processor);
 addGiltEventsHandlers(processor);
+
+addBalancesCallsHandlers(processor);
 
 processor.addPreHook({ range: { from: 1, to: 1 } }, initializeSquid);
 processor.addPreHook({ range: { from: 3000000 } }, updateBalances);

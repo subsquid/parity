@@ -24,9 +24,12 @@ export class Transfer {
   @ManyToOne_(() => Token, {nullable: false})
   token!: Token
 
-  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
-  amount!: bigint
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
+  amount!: bigint | undefined | null
 
   @Column_("timestamp with time zone", {nullable: false})
   timestamp!: Date
+
+  @Column_("bool", {nullable: true})
+  successful!: boolean | undefined | null
 }

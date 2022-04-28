@@ -49,6 +49,10 @@
     "society.Vote",
     "society.DefenderVote",
 
+    "phragmenElection.NewTerm",
+    "phragmenElection.CandidateSlashed",
+    "phragmenElection.SeatHolderSlashed",
+
     "gilt.BidPlaced",
     "gilt.BidRetracted",
     "gilt.GiltIssued",
@@ -66,5 +70,11 @@
 
     "vesting.VestingUpdated",
     "vesting.VestingCompleted"
+  ],
+  "calls": [
+    "balances.transfer",
+    "balances.force_transfer",
+    "balances.transfer_keep_alive",
+    "balances.transfer_all"
   ]
 }

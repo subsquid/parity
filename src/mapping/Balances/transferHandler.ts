@@ -2,7 +2,6 @@ import {
   EventHandler,
   EventHandlerContext,
 } from "@subsquid/substrate-processor";
-import { v4 } from "uuid";
 import { BalancesTransferEvent } from "../../types/generated/events";
 import {
   createTransfer,
@@ -20,7 +19,7 @@ type TransferEvent = {
 };
 
 export const transferHandler: EventHandler = async (ctx) => {
-  const { store, block } = ctx;
+  const { store, block, event } = ctx;
   const { from, to, amount } = getTransferEvent(ctx);
 
   const [accountFrom, accountTo] = await storeAccountToUpdateBalances(
@@ -30,12 +29,13 @@ export const transferHandler: EventHandler = async (ctx) => {
   );
 
   await createTransfer(store, {
-    id: v4().toString(),
+    id: event.id,
     senderAccount: accountFrom,
     receiverAccount: accountTo,
     token: await getOrCreateKusamaToken(store),
     amount,
     timestamp: timestampToDate(block),
+    successful: true,
   });
 };
 
