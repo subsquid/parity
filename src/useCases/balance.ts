@@ -4,7 +4,7 @@ import {
   SubstrateBlock,
 } from "@subsquid/substrate-processor";
 import { DeepPartial } from "typeorm";
-import { max } from "lodash";
+import { max, uniq } from "lodash";
 import { Account, Balance } from "../model";
 import { findByCriteria, upsert } from "./common";
 import {
@@ -60,10 +60,11 @@ export const storeAccountToUpdateBalances = async (
   accountAddresses: AccountAddress[] // in Kusama format only!
 ): Promise<Account[]> => {
   const kusamaChain = await getOrCreateKusamaChain(store);
+  const uniqAddresses = uniq(accountAddresses);
   // create accounts for given addresses if not exist
   const accounts = await Promise.all(
     // this approach is acceptable until accountAddress.length <= 2
-    accountAddresses.map((accountAddress) =>
+    uniqAddresses.map((accountAddress) =>
       createOrUpdateAccount(store, {
         id: accountAddress,
         chain: kusamaChain,
@@ -75,7 +76,7 @@ export const storeAccountToUpdateBalances = async (
 
   // store given accounts for the further RPC call
   await Promise.all(
-    accountAddresses.map((accountAddress) =>
+    uniqAddresses.map((accountAddress) =>
       createOrUpdateCachedAccount(store, {
         accountId: accountAddress,
         blacklistedAtBlockTimestamp: null,
@@ -84,7 +85,9 @@ export const storeAccountToUpdateBalances = async (
     )
   );
 
-  return accounts;
+  return accountAddresses.map(
+    (address) => accounts.find(({ id }) => id === address) as Account
+  );
 };
 
 export const updateBalances = async ({
