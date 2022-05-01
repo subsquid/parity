@@ -4,7 +4,15 @@ import { AccountAddress } from "../customTypes";
 
 const kusamaCodec = ss58.codec("kusama");
 export const toKusamaFormat = (data: Uint8Array): AccountAddress => {
-  return kusamaCodec.encode(data);
+  try {
+    return kusamaCodec.encode(data);
+  } catch (err) {
+    const { message } = err as Error;
+    if (message === "invalid address length") {
+      return `0x${(data as Buffer).toString("hex")}`;
+    }
+    throw err;
+  }
 };
 
 const substrateCodec = ss58.codec("substrate");

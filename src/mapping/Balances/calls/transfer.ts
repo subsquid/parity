@@ -17,21 +17,21 @@ const getCallData = (ctx: ExtrinsicHandlerContext) => {
   if (call.isV1050) {
     const { dest, value } = call.asV1050;
     return {
-      to: dest,
+      to: toKusamaFormat(dest),
       amount: value,
     };
   }
   if (call.isV2028) {
     const { dest, value } = call.asV2028;
     return {
-      to: dest.value as Uint8Array,
+      to: toKusamaFormat(dest.value as Uint8Array),
       amount: value,
     };
   }
   if (call.isV9111) {
     const { dest, value } = call.asV9111;
     return {
-      to: dest.value as Uint8Array,
+      to: toKusamaFormat(dest.value as Uint8Array),
       amount: value,
     };
   }
@@ -47,7 +47,7 @@ export const handleTransfer = async (ctx: ExtrinsicHandlerContext) => {
   const [accountFrom, accountTo] = await storeAccountToUpdateBalances(
     store,
     block,
-    [extrinsic.signer, toKusamaFormat(data.to)]
+    [extrinsic.signer, data.to]
   );
 
   await createTransfer(store, {

@@ -14,13 +14,13 @@ const getCallData = (ctx: ExtrinsicHandlerContext) => {
   if (call.isV9050) {
     const { dest } = call.asV9050;
     return {
-      to: dest.value as Uint8Array,
+      to: toKusamaFormat(dest.value as Uint8Array),
     };
   }
   if (call.isV9111) {
     const { dest } = call.asV9111;
     return {
-      to: dest.value as Uint8Array,
+      to: toKusamaFormat(dest.value as Uint8Array),
     };
   }
   throw new UnknownVersionError(call.constructor.name);
@@ -35,7 +35,7 @@ export const handleTransferAll = async (ctx: ExtrinsicHandlerContext) => {
   const [accountFrom, accountTo] = await storeAccountToUpdateBalances(
     store,
     block,
-    [extrinsic.signer, toKusamaFormat(data.to)]
+    [extrinsic.signer, data.to]
   );
 
   await createTransfer(store, {
